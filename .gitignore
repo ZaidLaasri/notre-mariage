@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.angular/
+.npm-cache/
+.tools/
+.env*
+!.env.example
+src/runtime-config.json
+*.log

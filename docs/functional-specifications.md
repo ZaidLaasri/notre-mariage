@@ -1,0 +1,27 @@
+# Spécifications fonctionnelles
+
+## Règles
+
+Un mariage rassemble ses membres et cérémonies. Une cérémonie contient catégories et besoins. Une offre répond à un besoin et référence un prestataire réutilisable. La préférence individuelle, la décision commune, la réservation, la dépense et le paiement sont distincts.
+
+Les montants sont des entiers en centimes ; la devise est MAD ou EUR. Un taux manuel rationnel convertit les montants vers MAD. Les engagements proviennent uniquement des dépenses validées ; les offres non retenues ne contribuent jamais aux dépenses. Les paiements ne peuvent dépasser le montant de leur dépense. Les invités appartiennent à un foyer et peuvent recevoir une invitation par cérémonie.
+
+## Parcours et erreurs
+
+Authentification → création/rejoindre un espace → cérémonies → besoin → offre → photos → comparaison → sélection → réservation → dépense → paiements. Toute écriture affiche attente, confirmation ou erreur ; une erreur distante ne doit jamais être présentée comme un succès. Les formulaires contrôlent champs requis, montants et URLs. La démo est explicitement locale, fictive et réinitialisable sans toucher au mariage réel.
+
+## Catalogue
+
+Recherche et filtres par cérémonie, catégorie et statut. Offre : coordonnées, conditions, tarif forfait/personne/article, inclus/exclus, disponibilité, critères personnalisés, favoris, galerie, avis individuels. Comparaison 2–4 offres du même besoin. Sur mobile : cartes et critères empilés. Sélection réversible sans paiement implicite.
+
+## Vie du mariage
+
+Budget consolidé et par cérémonie ; invités/foyers avec CSV ; tâches responsables et échéances ; ensembles Dfou3 et articles assortis ; tenues et essayages ; inspirations avec tags. Export métier JSON et copie séparée des fichiers Storage. Aucun rappel externe automatique.
+
+## Acceptation sécurité
+
+Un non-membre ne peut lire ni modifier de données ni télécharger les photos, même en appelant directement REST. Une référence vers un autre mariage est rejetée par FK composite. L'invitation est à usage unique, expirante, liée à l'email vérifié et limitée à deux membres. Les rôles ne sont pas modifiables depuis le client.
+
+## Évolution métier
+
+Voir [les règles Jhaz, Moodboards et Timeline](functional-evolution.md). Le trousseau est distinct du Dfou3. Ses estimations ne deviennent des engagements qu'après action explicite et sa dépense peut être choisie dans le budget existant. Les moodboards partagent les photos entre les deux membres et préservent les anciennes inspirations non classées. La timeline du jour J est indépendante des tâches de préparation, accepte des activités parallèles signalées et sépare notes internes et programme prestataires. Makeup et Hair restent deux besoins ; un forfait commun ne crée aucun paiement automatique.

@@ -1,0 +1,257 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">NOS ENVIES PRENNENT COULEUR</span>
+    <h1>Moodboards & inspirations</h1>
+    <p>
+      Des photos, des idées et nos regards croisés, dans un espace privé
+      partagé.
+    </p>
+  </div>
+  <div class="row wrap">
+    <button (click)="editBoard()">＋ Un moodboard</button
+    ><button (click)="edit()">＋ Une inspiration</button>
+  </div>
+</div>
+<section class="panel">
+  <div class="filters">
+    <label
+      >Moodboard<select [value]="board()" (change)="selectBoard($event)">
+        <option value="">Toutes les inspirations, anciennes incluses</option>
+        @for(b of s.data().moodboards;track b.id){
+        <option [value]="b.id">{{b.name}} · {{b.theme}}</option>
+        }
+      </select></label
+    >@if(selectedBoard();as b){<button (click)="editBoard(b)">
+      Modifier le moodboard</button
+    ><button (click)="deleteBoard()">Supprimer si vide</button>}
+  </div>
+  @if(selectedBoard();as b){
+  <h2>{{b.name}}</h2>
+  <p>{{b.description}}</p>
+  }<label class="upload bulk-upload"
+    >Importer plusieurs photos dans ce moodboard<input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      multiple
+      (change)="importImages($event)"
+      [disabled]="!board()||s.busy()"
+  /></label>
+  <p class="hint">
+    Choisissez un moodboard pour importer. Une fiche est créée par image ; vous
+    pouvez ensuite compléter ses informations ou ajouter d’autres photos à sa
+    galerie. JPEG, PNG et WebP ; compression avant envoi, stockage privé.
+  </p>
+</section>
+@if(showBoard()){
+<section class="panel">
+  <h2>
+    {{boardForm.controls.id.value?'Modifier le moodboard':'Créer un moodboard'}}
+  </h2>
+  <form [formGroup]="boardForm" (ngSubmit)="saveBoard()" class="form-grid">
+    <label>Titre<input formControlName="name" /></label
+    ><label
+      >Thème<input formControlName="theme" list="moodboard-themes" /></label
+    ><label
+      >Cérémonie<select formControlName="ceremony_id">
+        <option value="">Toutes / commune</option>
+        @for(c of s.data().ceremonies;track c.id){
+        <option [value]="c.id">{{c.name}}</option>
+        }
+      </select></label
+    ><label
+      >Description<textarea formControlName="description"></textarea>
+    </label>
+    <div class="form-actions">
+      <button class="primary" [disabled]="boardForm.invalid||s.busy()">
+        Enregistrer</button
+      ><button type="button" (click)="showBoard.set(false)">Annuler</button>
+    </div>
+  </form>
+</section>
+} @if(showIdea()){
+<section class="panel">
+  <h2>Les détails de notre inspiration</h2>
+  <form [formGroup]="ideaForm" (ngSubmit)="save()" class="form-grid">
+    <label>Titre<input formControlName="name" /></label
+    ><label
+      >Moodboard<select formControlName="moodboard_id">
+        <option value="">Non classée</option>
+        @for(b of s.data().moodboards;track b.id){
+        <option [value]="b.id">{{b.name}}</option>
+        }
+      </select></label
+    ><label
+      >Description<textarea formControlName="description"></textarea></label
+    ><label
+      >Cérémonie<select formControlName="ceremony_id">
+        <option value="">Commune</option>
+        @for(c of s.data().ceremonies;track c.id){
+        <option [value]="c.id">{{c.name}}</option>
+        }
+      </select></label
+    ><label
+      >Thème<input formControlName="theme" list="moodboard-themes" /></label
+    ><label
+      >Couleurs, séparées par des virgules<input
+        formControlName="colors" /></label
+    ><label
+      >Tags, séparés par des virgules<input formControlName="tags" /></label
+    ><label
+      >Source Instagram, Pinterest ou autre (HTTPS)<input
+        type="url"
+        formControlName="source_url"
+        placeholder="https://…" /></label
+    ><label
+      >Prestataire<select formControlName="provider_id">
+        <option value="">Aucun</option>
+        @for(p of s.data().providers;track p.id){
+        <option [value]="p.id">{{p.name}}</option>
+        }
+      </select></label
+    ><label
+      >Proposition<select formControlName="offer_id">
+        <option value="">Aucune</option>
+        @for(o of s.data().provider_offers;track o.id){
+        <option [value]="o.id">{{o.name}}</option>
+        }
+      </select></label
+    ><label
+      >Tenue<select formControlName="outfit_id">
+        <option value="">Aucune</option>
+        @for(o of s.data().outfits;track o.id){
+        <option [value]="o.id">{{o.name}}</option>
+        }
+      </select></label
+    ><label
+      >Tâche<select formControlName="task_id">
+        <option value="">Aucune</option>
+        @for(t of s.data().tasks;track t.id){
+        <option [value]="t.id">{{t.name}}</option>
+        }
+      </select></label
+    ><label
+      >Besoin<select formControlName="requirement_id">
+        <option value="">Aucun</option>
+        @for(r of s.data().service_requirements;track r.id){
+        <option [value]="r.id">{{r.name}}</option>
+        }
+      </select></label
+    >
+    <div class="form-actions">
+      <button class="primary" [disabled]="ideaForm.invalid||s.busy()">
+        Enregistrer</button
+      ><button type="button" (click)="showIdea.set(false)">Annuler</button>
+    </div>
+  </form>
+</section>
+}
+<datalist id="moodboard-themes">
+  @for(t of themes;track t){
+  <option [value]="t"></option>
+  }
+</datalist>
+<div class="filters">
+  <input
+    aria-label="Rechercher les inspirations"
+    placeholder="Un titre, une couleur, un tag…"
+    (input)="query.set(value($event))"
+  /><select
+    aria-label="Thème"
+    [value]="theme()"
+    (change)="theme.set(value($event))"
+  >
+    <option value="">Tous les thèmes</option>
+    @for(t of themes;track t){
+    <option>{{t}}</option>
+    }</select
+  ><select
+    aria-label="Cérémonie des inspirations"
+    (change)="ceremony.set(value($event))"
+  >
+    <option value="">Toutes les cérémonies</option>
+    @for(c of s.data().ceremonies;track c.id){
+    <option [value]="c.id">{{c.name}}</option>
+    }</select
+  ><button (click)="mosaic.set(!mosaic())">
+    {{mosaic()?'Grille régulière':'Mosaïque'}}
+  </button>
+</div>
+<div class="moodboard-grid" [class.mosaic]="mosaic()">
+  @for(i of ideas();track i.id){
+  <article
+    class="panel moodboard-card"
+    draggable="true"
+    (dragstart)="dragged.set(i.id)"
+    (dragend)="dragged.set('')"
+    (dragover)="allow($event)"
+    (drop)="drop(i,$event)"
+  >
+    <app-gallery
+      [offerId]="i.id"
+      kind="inspiration"
+      [editable]="true"
+      [compact]="true"
+    />
+    <div class="row between">
+      <h2>{{i.name}}</h2>
+      <button
+        (click)="favorite(i)"
+        [attr.aria-label]="i.favorite?'Retirer des favoris':'Ajouter aux favoris'"
+      >
+        {{i.favorite?'♥':'♡'}}
+      </button>
+    </div>
+    <p>{{i.description}}</p>
+    <div class="tags">
+      <span class="pill">{{i.theme||'Ambiance'}}</span>@for(tag of i.tags;track
+      $index){<span class="pill">{{tag}}</span>}@for(color of i.colors??[];track
+      $index){<span class="pill rose">{{color}}</span>}
+    </div>
+    @if(i.source_url){<a
+      [href]="i.source_url"
+      target="_blank"
+      rel="noopener noreferrer"
+      >Source de l’inspiration ↗</a
+    >}
+    <div class="row wrap">
+      <button (click)="edit(i)">Modifier / associer</button
+      ><button (click)="move(i,-1)" aria-label="Avancer l’inspiration">↑</button
+      ><button (click)="move(i,1)" aria-label="Reculer l’inspiration">↓</button
+      ><button (click)="removing.set(i.id)">Supprimer</button>
+    </div>
+    @if(removing()===i.id){
+    <p>Supprimer cette inspiration, ses photos et commentaires ?</p>
+    <button class="danger" (click)="remove(i)" [disabled]="s.busy()">
+      Confirmer</button
+    ><button (click)="removing.set('')">Conserver</button>}
+    <h3>Nos commentaires</h3>
+    @for(comment of comments(i.id);track comment.id){
+    <div class="review">
+      <strong>{{comment.user_id===s.userId()?'Moi':'Ma moitié'}}</strong>
+      <p>{{comment.body}}</p>
+      @if(comment.user_id===s.userId()){<button
+        (click)="editComment(i.id,comment)"
+      >
+        Modifier</button
+      ><button (click)="removeComment(comment)">Supprimer</button>}
+    </div>
+    }<button (click)="editComment(i.id)">Commenter</button
+    >@if(commenting()===i.id){
+    <form [formGroup]="commentForm" (ngSubmit)="saveComment()">
+      <label>Mon commentaire<textarea formControlName="body"></textarea></label
+      ><button class="primary" [disabled]="commentForm.invalid||s.busy()">
+        Partager</button
+      ><button type="button" (click)="commenting.set('')">Annuler</button>
+    </form>
+    }
+  </article>
+  }@empty{
+  <div class="empty panel">
+    <h2>Commençons par une photo</h2>
+    <p>
+      Créez un moodboard et importez vos inspirations. Les anciennes fiches
+      restent disponibles dans la vue globale.
+    </p>
+  </div>
+  }
+</div>

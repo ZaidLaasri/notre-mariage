@@ -1,0 +1,277 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">POUR NOTRE NOUVEAU FOYER</span>
+    <h1>Trousseau — الدهاز</h1>
+    <p>
+      Le Jhaz, à composer selon nos envies. Un espace distinct des cadeaux du
+      Dfou3.
+    </p>
+  </div>
+  <div class="row wrap">
+    <button (click)="manage.set(!manage())">Catégories & ensembles</button
+    ><button class="primary" (click)="edit()">＋ Un article</button>
+  </div>
+</div>
+<div class="kpi-grid">
+  <article class="kpi">
+    <span>Coût prévu des articles</span>
+    <h3>{{s.format(totals().planned)}}</h3>
+  </article>
+  <article class="kpi">
+    <span>Dépenses liées au budget</span>
+    <h3>{{s.format(totals().committed)}}</h3>
+  </article>
+  <article class="kpi">
+    <span>Réellement payé</span>
+    <h3>{{s.format(totals().paid)}}</h3>
+  </article>
+  <article class="kpi">
+    <span>Trousseau préparé</span>
+    <h3>{{totals().prepared}} / {{totals().count}}</h3>
+    <progress
+      [value]="totals().prepared"
+      [max]="totals().count||1"
+      aria-label="Progression du trousseau"
+    ></progress>
+  </article>
+</div>
+@if(manage()){
+<section class="panel">
+  <div class="section-heading">
+    <h2>Nos catégories</h2>
+    <button (click)="seed()">Ajouter un modèle facultatif</button>
+  </div>
+  <form
+    [formGroup]="categoryForm"
+    (ngSubmit)="saveCategory()"
+    class="form-grid"
+  >
+    <label>Nom<input formControlName="name" /></label
+    ><label
+      >Budget prévu en MAD<input
+        formControlName="budget"
+        inputmode="decimal" /></label
+    ><button class="primary" [disabled]="categoryForm.invalid||s.busy()">
+      {{categoryForm.controls.id.value?'Modifier':'Ajouter'}}</button
+    ><button type="button" (click)="editCategory()">Nouvelle catégorie</button>
+  </form>
+  @for(c of s.data().trousseau_categories;track c.id){
+  <div class="list-row">
+    <span
+      >{{c.name}}<small
+        >{{categoryProgress(c.id)}} préparés · budget
+        {{s.format(c.budget_minor)}}</small
+      ></span
+    >
+    <div class="row">
+      <button (click)="editCategory(c)">Modifier</button
+      ><button (click)="removeCategory(c)">Supprimer si vide</button>
+    </div>
+  </div>
+  }
+</section>
+<section class="panel">
+  <h2>Ensembles assortis</h2>
+  <form [formGroup]="setForm" (ngSubmit)="saveSet()" class="form-grid">
+    <label
+      >Nom<input
+        formControlName="name"
+        placeholder="Linge ivoire et sauge" /></label
+    ><label>Notes<input formControlName="notes" /></label
+    ><button [disabled]="setForm.invalid||s.busy()">
+      Enregistrer l’ensemble</button
+    ><button type="button" (click)="editSet()">Nouvel ensemble</button>
+  </form>
+  <div class="ceremony-grid">
+    @for(set of s.data().trousseau_sets;track set.id){
+    <article>
+      <h3>{{set.name}}</h3>
+      <p>{{set.notes}}</p>
+      <app-gallery [offerId]="set.id" kind="trousseau_set" [editable]="true" />
+      <div class="row">
+        <button (click)="editSet(set)">Modifier</button
+        ><button (click)="removeSet(set)">Supprimer si vide</button>
+      </div>
+    </article>
+    }
+  </div>
+</section>
+} @if(show()){
+<section class="panel">
+  <h2>{{editing()?'Modifier l’article':'Un nouvel article'}}</h2>
+  <form [formGroup]="itemForm" (ngSubmit)="save()" class="form-grid">
+    <label>Nom<input formControlName="name" /></label
+    ><label
+      >Catégorie<select formControlName="category_id">
+        <option value="">Choisir</option>
+        @for(c of s.data().trousseau_categories;track c.id){
+        <option [value]="c.id">{{c.name}}</option>
+        }
+      </select></label
+    ><label
+      >Ensemble assorti<select formControlName="set_id">
+        <option value="">Aucun</option>
+        @for(set of s.data().trousseau_sets;track set.id){
+        <option [value]="set.id">{{set.name}}</option>
+        }
+      </select></label
+    ><label
+      >Fournisseur<select formControlName="provider_id">
+        <option value="">Non renseigné</option>
+        @for(p of s.data().providers;track p.id){
+        <option [value]="p.id">{{p.name}}</option>
+        }
+      </select></label
+    ><label
+      >Description<textarea formControlName="description"></textarea></label
+    ><label>Notes<textarea formControlName="notes"></textarea></label
+    ><label
+      >Quantité<input
+        type="number"
+        min="1"
+        step="1"
+        formControlName="quantity" /></label
+    ><label
+      >Prix unitaire prévu<input
+        formControlName="amount"
+        inputmode="decimal" /></label
+    ><label
+      >Devise<select formControlName="currency">
+        <option>MAD</option>
+        <option>EUR</option>
+      </select></label
+    ><label
+      >Prise en charge<input
+        formControlName="responsible"
+        placeholder="Mariée, marié, famille…" /></label
+    ><label
+      >État<select formControlName="status">
+        @for(st of statuses;track st){
+        <option>{{st}}</option>
+        }
+      </select></label
+    >
+    <div class="form-actions">
+      <button class="primary" [disabled]="itemForm.invalid||s.busy()">
+        Enregistrer</button
+      ><button type="button" (click)="show.set(false)">Annuler</button>
+    </div>
+  </form>
+  <p class="hint">
+    Le prix prévu n’ajoute aucune dépense au budget. Liez l’achat explicitement
+    une fois convenu.
+  </p>
+</section>
+} @if(expenseForm.controls.item_id.value){
+<section class="panel">
+  <h2>Relier cet achat au budget</h2>
+  <form [formGroup]="expenseForm" class="form-grid">
+    <label
+      >Dépense existante<select formControlName="expense_id">
+        <option value="">Aucune / détacher</option>
+        @for(e of availableExpenses();track e.id){
+        <option [value]="e.id">
+          {{e.name}} · {{s.format(e.amount_minor,e.currency)}}
+        </option>
+        }
+      </select></label
+    ><button type="button" (click)="linkExpense()" [disabled]="s.busy()">
+      Utiliser ce lien sans dupliquer</button
+    ><label
+      >Ou créer un engagement dans<select formControlName="ceremony_id">
+        <option value="">Choisir un budget</option>
+        @for(c of s.data().ceremonies;track c.id){
+        <option [value]="c.id">{{c.name}}</option>
+        }
+      </select></label
+    ><button type="button" (click)="engage()" [disabled]="s.busy()">
+      Engager le prix prévu dans le budget</button
+    ><button type="button" (click)="expenseForm.reset()">Fermer</button>
+  </form>
+  <p class="hint">
+    Si l’article est déjà relié, créer un engagement réutilise sa dépense.
+    Détacher ou supprimer un article conserve la dépense et les paiements.
+  </p>
+</section>
+}
+<div class="filters">
+  <input
+    aria-label="Rechercher dans le trousseau"
+    placeholder="Rechercher un article, une note…"
+    (input)="query.set(value($event))"
+  /><select
+    aria-label="Catégorie du trousseau"
+    (change)="category.set(value($event))"
+  >
+    <option value="">Toutes les catégories</option>
+    @for(c of s.data().trousseau_categories;track c.id){
+    <option [value]="c.id">{{c.name}} · {{categoryProgress(c.id)}}</option>
+    }</select
+  ><select
+    aria-label="Statut des articles"
+    (change)="status.set(value($event))"
+  >
+    <option value="">Tous les états</option>
+    @for(st of statuses;track st){
+    <option>{{st}}</option>
+    }</select
+  ><select
+    aria-label="Ensemble assorti"
+    (change)="setFilter.set(value($event))"
+  >
+    <option value="">Tous les ensembles</option>
+    @for(set of s.data().trousseau_sets;track set.id){
+    <option [value]="set.id">{{set.name}}</option>
+    }
+  </select>
+</div>
+<div class="offer-grid">
+  @for(item of items();track item.id){
+  <article class="panel">
+    <span class="eyebrow">{{categoryName(item.category_id)}}</span>
+    <h2>{{item.name}}</h2>
+    <app-gallery
+      [offerId]="item.id"
+      kind="trousseau_item"
+      [editable]="true"
+      [compact]="true"
+    />
+    <p>{{item.description}}</p>
+    <p>
+      {{item.quantity}} × {{s.format(item.unit_minor,item.currency)}} ·
+      {{item.responsible}}
+    </p>
+    <p class="hint">{{item.notes}}</p>
+    <label
+      >Checklist : état de préparation<select
+        [value]="item.status"
+        (change)="setStatus(item,$event)"
+      >
+        @for(st of statuses;track st){
+        <option>{{st}}</option>
+        }
+      </select></label
+    >@if(expense(item.expense_id);as e){
+    <p class="pill">
+      Budget lié : {{e.name}} · {{s.format(e.amount_minor,e.currency)}}
+    </p>
+    }
+    <div class="row wrap">
+      <button (click)="edit(item)">Modifier</button
+      ><button (click)="link(item)">Lier au budget</button
+      ><button (click)="removing.set(item.id)">Supprimer</button>
+    </div>
+    @if(removing()===item.id){
+    <p>Supprimer cet article et ses photos ? Les paiements seront conservés.</p>
+    <button class="danger" (click)="remove(item)" [disabled]="s.busy()">
+      Confirmer</button
+    ><button (click)="removing.set('')">Conserver</button>}
+  </article>
+  }@empty{
+  <div class="empty panel">
+    <h2>Préparons notre nouveau foyer</h2>
+    <p>Ajoutez vos catégories et articles librement.</p>
+    <button (click)="manage.set(true)">Organiser les catégories</button>
+  </div>
+  }
+</div>

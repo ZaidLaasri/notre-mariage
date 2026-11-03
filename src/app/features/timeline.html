@@ -1,0 +1,190 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">LE DÉROULEMENT DE NOTRE BEAU JOUR</span>
+    <h1>Timeline — Jour J</h1>
+    <p>Le programme de la fête, distinct des tâches de préparation.</p>
+  </div>
+  <div class="row wrap">
+    <button (click)="consultation.set(!consultation())">
+      {{consultation()?'Organiser':'Mode consultation'}}</button
+    ><button class="primary" (click)="edit()" [disabled]="!ceremony()">
+      ＋ Une étape
+    </button>
+  </div>
+</div>
+<section class="panel">
+  <div class="filters">
+    <label
+      >Cérémonie<select [value]="ceremony()" (change)="choose($event)">
+        @for(c of s.data().ceremonies;track c.id){
+        <option [value]="c.id">{{c.name}}</option>
+        }
+      </select></label
+    ><button (click)="chronological.set(!chronological())">
+      {{chronological()?'Afficher l’ordre manuel':'Vue chronologique'}}</button
+    ><button (click)="download()" [disabled]="!ceremony()">
+      Télécharger le programme prestataires</button
+    ><button (click)="print()" [disabled]="!ceremony()">
+      Imprimer / Enregistrer PDF
+    </button>
+  </div>
+  <p class="hint">
+    Le document prestataires exclut les notes internes, coordonnées,
+    responsabilités, prix et données du mariage. Seules les étapes non annulées,
+    leurs horaires, lieux et notes partageables sont exportés. Vérifiez-les
+    avant transmission.
+  </p>
+  @if(conflicts().size){
+  <p class="conflict" role="status">
+    {{conflicts().size}} étapes se chevauchent. Vérifiez si ces activités
+    peuvent avoir lieu en parallèle.
+  </p>
+  }@if(!manual().length&&ceremony()){<button
+    (click)="template()"
+    [disabled]="s.busy()"
+  >
+    Ajouter un exemple fictif modifiable</button
+  >}
+</section>
+@if(show()&&!consultation()){
+<section class="panel">
+  <h2>{{editing()?'Modifier l’étape':'Une nouvelle étape'}}</h2>
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+    <label>Titre<input formControlName="title" /></label
+    ><label>Lieu<input formControlName="location" /></label
+    ><label>Début<input type="time" formControlName="start" /></label
+    ><label
+      >Jour de début<select formControlName="start_day">
+        <option [ngValue]="0">Jour de cérémonie</option>
+        <option [ngValue]="1">Lendemain J+1</option>
+      </select></label
+    ><label>Fin<input type="time" formControlName="end" /></label
+    ><label
+      >Jour de fin<select formControlName="end_day">
+        <option [ngValue]="0">Jour de cérémonie</option>
+        <option [ngValue]="1">Lendemain J+1</option>
+      </select></label
+    ><label
+      >Description interne<textarea
+        formControlName="description"
+      ></textarea></label
+    ><label
+      >Note partageable aux prestataires<textarea
+        formControlName="public_note"
+        placeholder="Visible sur le programme exporté"
+      ></textarea></label
+    ><label>Responsable (privé)<input formControlName="responsible" /></label
+    ><label
+      >Statut<select formControlName="status">
+        @for(st of statuses;track st){
+        <option>{{st}}</option>
+        }
+      </select></label
+    ><label
+      >Prestataires impliqués (sélection multiple)<select
+        multiple
+        formControlName="provider_ids"
+      >
+        @for(p of s.data().providers;track p.id){
+        <option [value]="p.id">{{p.name}}</option>
+        }
+      </select></label
+    ><label
+      >Proposition liée<select formControlName="offer_id">
+        <option value="">Aucune</option>
+        @for(o of offers();track o.id){
+        <option [value]="o.id">{{o.name}}</option>
+        }
+      </select></label
+    ><label
+      >Notes logistiques internes<textarea
+        formControlName="logistics"
+      ></textarea>
+    </label>
+    <div class="form-actions">
+      <button class="primary" [disabled]="form.invalid||s.busy()">
+        Enregistrer</button
+      ><button type="button" (click)="show.set(false)">Annuler</button>
+    </div>
+  </form>
+</section>
+} @if(!consultation()&&cars().length){
+<section class="panel">
+  <h2>Coordonner le cortège retenu</h2>
+  @for(car of cars();track car.id){
+  <div class="list-row">
+    <span>{{car.name}} · {{s.provider(car.provider_id)?.name}}</span
+    ><button (click)="vehicle(car.id)">Préparer son étape de transport</button>
+  </div>
+  }
+</section>
+}
+<section
+  class="day-timeline"
+  [class.consultation]="consultation()"
+  aria-label="Programme de la cérémonie"
+>
+  @for(event of events();track event.id){
+  <article
+    class="timeline-event"
+    [class.conflict-border]="conflicts().has(event.id)"
+    [attr.draggable]="!chronological()&&!consultation()"
+    (dragstart)="dragged.set(event.id)"
+    (dragover)="allow($event)"
+    (drop)="drop(event.id,$event)"
+    (dragend)="dragged.set('')"
+  >
+    <div class="timeline-time">
+      {{time(event.start_minute)}}<small
+        >jusqu’à {{time(event.end_minute)}}</small
+      >
+    </div>
+    <div class="panel">
+      <div class="row between">
+        <h2>{{event.title}}</h2>
+        <span class="pill">{{event.status}}</span>
+      </div>
+      <p>{{event.location}}</p>
+      <p>{{event.description}}</p>
+      @if(event.public_note){
+      <p class="shared-note">Note prestataires : {{event.public_note}}</p>
+      }@if(!consultation()){
+      <p class="hint">
+        Responsable : {{event.responsible||'À définir'}} ·
+        {{providerNames(event.id)}}
+      </p>
+      <p class="hint">{{event.logistics}}</p>
+      @if(conflicts().has(event.id)){
+      <p class="conflict">Chevauchement horaire</p>
+      }
+      <div class="row wrap">
+        <button (click)="edit(event)">Modifier</button
+        ><button
+          (click)="move(event.id,-1)"
+          [disabled]="chronological()||s.busy()"
+          aria-label="Monter l’étape"
+        >
+          ↑</button
+        ><button
+          (click)="move(event.id,1)"
+          [disabled]="chronological()||s.busy()"
+          aria-label="Descendre l’étape"
+        >
+          ↓</button
+        ><button (click)="removing.set(event.id)">Supprimer</button>
+      </div>
+      @if(removing()===event.id){
+      <p>Supprimer cette étape ?</p>
+      <button class="danger" (click)="remove(event)" [disabled]="s.busy()">
+        Confirmer</button
+      ><button (click)="removing.set('')">Annuler</button>}}
+    </div>
+  </article>
+  }@empty{
+  <div class="empty panel">
+    <h2>Imaginons le déroulement de notre fête</h2>
+    <p>Ajoutez des étapes ou partez d’un exemple facultatif.</p>
+    <a routerLink="/ceremonies">Nos cérémonies →</a>
+  </div>
+  }
+</section>

@@ -1,0 +1,13 @@
+# Évolution Jhaz, Moodboard et jour J
+
+Le Jhaz (الدهاز) concerne les affaires et équipements préparés pour la mariée et le foyer. Il reste indépendant du Dfou3 et toutes les catégories sont modifiables, sans obligation culturelle. Les articles appartiennent à une catégorie et peuvent constituer des ensembles assortis. Leur coût prévu est quantité × prix unitaire ; seul le lien vers `expenses` contribue au budget consolidé. Créer un engagement est explicite, transactionnel et idempotent ; lier une dépense existante n'en crée aucune. La suppression d'un article ne supprime jamais ses paiements.
+
+Les moodboards regroupent les inspirations et leurs galeries privées existantes. Les anciennes inspirations sans moodboard restent consultables. Titre, description, cérémonie, thème, couleurs, tags, source HTTPS, associations métier et commentaires par auteur complètent les médias réutilisés. Chaque moodboard est partagé selon la même appartenance au mariage. Suppression d'images via Storage puis métadonnées, aucune image Base64.
+
+La timeline est distincte des tâches : étapes du jour de chaque cérémonie avec heures, fin, statut, responsabilité, plusieurs prestataires et offre liée. Les horaires utilisent des minutes relatives au jour de cérémonie (0–2880 pour une fin après minuit), sans conversion de fuseau. L'ordre manuel peut différer de la vue chronologique. Les chevauchements sont signalés, pas interdits car certaines activités peuvent être parallèles. Glisser-déposer et boutons clavier réordonnent le programme.
+
+Le programme prestataires est un document HTML autonome téléchargeable/imprimable (enregistrer en PDF depuis le navigateur). Il ne contient que titre d'étape, horaires, lieu et note explicitement partageable. Les descriptions internes, responsabilités, coordonnées, logistique, prix, invités, avis, identifiants et liens Storage sont exclus. Aucun accès anonyme aux tables privées ni lien public permanent n'est ajouté.
+
+Makeup et Hair sont deux besoins distincts reliés éventuellement au même prestataire et à une référence de forfait commune. Une référence commune n'engage ni ne facture rien. Les critères propres à chaque catégorie complètent l'essai, la durée et les retouches. La voiture de cortège appartient aux transports, réutilise galerie/comparateur/avis et peut être associée à une étape de la timeline. Les critères restent éditables.
+
+Migration additive `004_wedding_extensions.sql`, à appliquer après 001–003. Les anciennes catégories/offres ne sont pas supprimées ni reclassées automatiquement. Les nouveaux mariages reçoivent les modèles beauté et cortège ; les modèles Jhaz sont initialisés explicitement depuis son écran. Aucun service ou abonnement supplémentaire.
