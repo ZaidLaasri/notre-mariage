@@ -2,6 +2,8 @@
 
 Application Angular privée pour préparer la Khotoba et le Drib Sdak à deux. Le projet précédent `../mariage-zaid-yasmine` est préservé.
 
+**Application publiée : https://notre-mariage-wheat.vercel.app** — Vercel Hobby, production vérifiée le 5 novembre 2026. Voir [l'état du déploiement](docs/deployment-status.md) et les redirections Supabase à configurer pour les emails.
+
 ## Démarrer
 
 Node **24.15+ (24.x)** requis. Installation standard :
@@ -25,7 +27,7 @@ Ouvrir http://127.0.0.1:4200 et choisir **Explorer la démonstration**. La démo
 
 Les commandes `npm start` et `npm run build` lisent automatiquement `.env`, puis `.env.local`. Les variables du terminal ou de Vercel restent prioritaires. Utiliser `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`. Ces fichiers locaux sont ignorés par Git ; `.env.example` n'est pas chargé. Avec la commande directe `ng serve`, exécuter d'abord `node scripts/config.mjs`.
 
-Suivre [le guide de déploiement](docs/deployment.md). Aucun compte Supabase, GitHub ou Vercel n'est créé par le code. Aucun déploiement distant n'est effectué automatiquement.
+Suivre [le guide de déploiement](docs/deployment.md). Les comptes et services externes sont gérés par le propriétaire. Le projet est désormais publié sur Vercel ; les prochains déploiements suivent les instructions du guide.
 
 1. Créer un projet **Supabase Free** et exécuter les migrations `supabase/migrations/*.sql` dans l’ordre numérique sur une base neuve.
 2. Configurer les URLs Auth et garder la vérification d'email activée.

@@ -1,5 +1,11 @@
 # Vérifications effectuées — 2 novembre 2026
 
+## Publication Vercel — 5 novembre 2026
+
+Application déployée et promue en production : https://notre-mariage-wheat.vercel.app. Plan Hobby vérifié, build distant réussi, déploiement READY. Les pages SPA de connexion/invitation/paramètres et les ressources initiales répondent HTTP 200. La configuration publique Supabase servie correspond aux paramètres locaux ; une requête anonyme n'expose aucun mariage. Build local et 25 tests applicatifs réussis avant publication.
+
+Le déploiement est réel ; les mentions « aucun déploiement » des sections historiques ci-dessous décrivent l'état aux dates antérieures. La recette authentifiée sur téléphone et les redirections Supabase sont à effectuer par le propriétaire. Voir [l'état de production et les réglages](deployment-status.md).
+
 ## Invitation par email — 5 novembre 2026
 
 Build de production et typecheck strict réussis. Vingt-cinq tests applicatifs passent, dont cinq nouveaux contrôles : normalisation de l'adresse et URL de redirection, appel Supabase Auth avec le code de l'invitation concernée, erreurs SMTP/quota avec secours manuel, acceptation via la RPC sécurisée existante et nettoyage du code seulement après succès, rejet des codes d'URL malformés/manquants. Les réponses Auth sont simulées : aucun email réel n'a été envoyé par les tests.
