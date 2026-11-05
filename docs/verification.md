@@ -1,5 +1,11 @@
 # Vérifications effectuées — 2 novembre 2026
 
+## Invitation par email — 5 novembre 2026
+
+Build de production et typecheck strict réussis. Vingt-cinq tests applicatifs passent, dont cinq nouveaux contrôles : normalisation de l'adresse et URL de redirection, appel Supabase Auth avec le code de l'invitation concernée, erreurs SMTP/quota avec secours manuel, acceptation via la RPC sécurisée existante et nettoyage du code seulement après succès, rejet des codes d'URL malformés/manquants. Les réponses Auth sont simulées : aucun email réel n'a été envoyé par les tests.
+
+L'interface Paramètres demande l'envoi après création de l'invitation ; la page publique `/rejoindre` permet la vérification Auth et l'acceptation explicite. Le SMTP du projet n'est pas encore configuré selon le propriétaire. L'envoi réel, la réception, les redirections Auth et la recette sur un autre appareil restent à effectuer après configuration du dashboard. Aucun secret SMTP, backend personnalisé ou nouvelle migration SQL n'est ajouté. Voir [le guide d'activation](email-invitations.md).
+
 ## Complément — évolution du 3 novembre 2026
 
 **Build Angular de production et typecheck strict réussis, sans avertissement.** Bundle initial ~523 Ko brut / 129 Ko transféré estimé ; nouvelles pages lazy. Vingt tests applicatifs réussis après intégration des évolutions.

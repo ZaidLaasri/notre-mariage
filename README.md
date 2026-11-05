@@ -23,13 +23,15 @@ Ouvrir http://127.0.0.1:4200 et choisir **Explorer la démonstration**. La démo
 
 ## Configurer le vrai mariage
 
+Les commandes `npm start` et `npm run build` lisent automatiquement `.env`, puis `.env.local`. Les variables du terminal ou de Vercel restent prioritaires. Utiliser `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`. Ces fichiers locaux sont ignorés par Git ; `.env.example` n'est pas chargé. Avec la commande directe `ng serve`, exécuter d'abord `node scripts/config.mjs`.
+
 Suivre [le guide de déploiement](docs/deployment.md). Aucun compte Supabase, GitHub ou Vercel n'est créé par le code. Aucun déploiement distant n'est effectué automatiquement.
 
 1. Créer un projet **Supabase Free** et exécuter les migrations `supabase/migrations/*.sql` dans l’ordre numérique sur une base neuve.
 2. Configurer les URLs Auth et garder la vérification d'email activée.
 3. Définir `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` dans l'environnement du terminal puis `node scripts/config.mjs`. Le fichier généré est ignoré par Git. Ces deux valeurs sont publiques par conception ; aucune clé secrète/service_role.
 4. Créer le premier compte, confirmer son email, se connecter et créer le mariage dans Paramètres.
-5. Le propriétaire génère un code d'invitation lié à l'email du second membre. Celui-ci crée son compte, confirme son email puis accepte le code dans Paramètres. Aucun email d'invitation automatique n'est envoyé par l'application.
+5. Dans Paramètres → Inviter ma moitié, le propriétaire demande l'envoi de l'invitation par email. Le destinataire vérifie son adresse puis confirme l'acceptation sur `/rejoindre`. Le code manuel reste disponible si l'envoi échoue. **Configurer SMTP et les URLs de redirection Auth avant l'envoi réel** : voir [le guide des invitations par email](docs/email-invitations.md). Le lien localhost ne fonctionne que sur l'ordinateur du serveur ; utiliser l'URL publique pour inviter depuis un autre appareil.
 
 ## Fonctionnalités de cette version
 

@@ -12,6 +12,12 @@ import {
 import { SERVICE_TEMPLATES } from "./catalogue-templates";
 import { validateInterval } from "./timeline";
 import { demoData, DEMO_WEDDING } from "./demo";
+import {
+  invitationEmail,
+  sendInvitationEmail,
+  pendingInvitation,
+  PENDING_INVITATION_KEY,
+} from "./invitations";
 import { convert, money } from "./money";
 const DEMO_KEY = "notre-mariage-demo-v1";
 @Injectable({ providedIn: "root" })
@@ -26,6 +32,7 @@ export class Store {
   readonly notice = signal("");
   readonly configured = signal(false);
   readonly recovering = signal(false);
+  readonly invitationToken = signal("");
   client: SupabaseClient | null = null;
   readonly total = computed(() => {
     const w = this.wedding();
@@ -56,6 +63,33 @@ export class Store {
   }
   async init() {
     try {
+      if (location.pathname === "/rejoindre") {
+        const token = pendingInvitation(location.search);
+        if (token) {
+          this.invitationToken.set(token);
+          try {
+            sessionStorage.setItem(PENDING_INVITATION_KEY, token);
+          } catch {
+            /* Keep token in memory when storage is unavailable. */
+          }
+        } else {
+          try {
+            const saved = sessionStorage.getItem(PENDING_INVITATION_KEY) ?? "";
+            if (/^[a-f0-9]{64}$/.test(saved)) this.invitationToken.set(saved);
+          } catch {
+            /* The email link can be reopened. */
+          }
+        }
+        if (new URLSearchParams(location.search).has("invitation")) {
+          const url = new URL(location.href);
+          url.searchParams.delete("invitation");
+          history.replaceState(
+            history.state,
+            "",
+            url.pathname + url.search + url.hash,
+          );
+        }
+      }
       this.recovering.set(location.hash.includes("password-recovery"));
       const response = await fetch("/runtime-config.json");
       const c: unknown = await response.json();
@@ -250,11 +284,52 @@ export class Store {
     await this.loadWedding();
   }
   async invite(email: string): Promise<string> {
+    if (!this.client || this.demo())
+      throw new Error("La connexion à votre espace réel est nécessaire.");
+    const normalized = invitationEmail(email);
+    if (normalized === this.session()?.user.email?.toLowerCase())
+      throw new Error(
+        "Indiquez l’adresse de votre moitié, différente de la vôtre.",
+      );
     const { data, error } = await this.client!.rpc("invite_partner", {
-      partner_email: email,
+      partner_email: normalized,
     });
     if (error) throw error;
     return String(data);
+  }
+  async sendPartnerEmail(email: string, token: string) {
+    if (!this.client || this.demo())
+      throw new Error("La connexion à votre espace réel est nécessaire.");
+    await sendInvitationEmail(this.client, email, location.origin, token);
+  }
+  async verifyInvitationOtp(email: string, token: string) {
+    if (!this.client) throw new Error("Supabase n’est pas configuré.");
+    if (!/^\d{6,10}$/.test(token.trim()))
+      throw new Error("Saisissez le code numérique reçu dans l’email.");
+    const { data, error } = await this.client.auth.verifyOtp({
+      email: invitationEmail(email),
+      token: token.trim(),
+      type: "email",
+    });
+    if (error) throw error;
+    this.session.set(data.session);
+    await this.loadWedding();
+  }
+  async acceptEmailInvitation() {
+    if (!this.client || this.demo())
+      throw new Error("Connectez-vous avec l’adresse invitée.");
+    const token = this.invitationToken();
+    if (!token)
+      throw new Error(
+        "Rouvrez le lien d’invitation reçu par email ou utilisez le code privé dans les paramètres.",
+      );
+    await this.accept(token);
+    this.invitationToken.set("");
+    try {
+      sessionStorage.removeItem(PENDING_INVITATION_KEY);
+    } catch {
+      /* Membership is already confirmed by the database. */
+    }
   }
   async refresh() {
     if (this.demo() || !this.wedding() || !this.client) return;

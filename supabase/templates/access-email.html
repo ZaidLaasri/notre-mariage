@@ -1,0 +1,43 @@
+<!-- Paste in Supabase Auth: Magic Link AND Confirm signup email templates. -->
+<div
+  style="
+    font-family: Arial, sans-serif;
+    color: #29372f;
+    max-width: 560px;
+    margin: auto;
+    padding: 28px;
+    background: #f8f6f1;
+  "
+>
+  <h1 style="font-family: Georgia, serif; font-weight: normal">
+    Notre Mariage
+  </h1>
+  <h2>Votre accès sécurisé</h2>
+  <p>Vous avez reçu une invitation ou demandé un accès à Notre Mariage.</p>
+  <p>
+    <a
+      href="{{ .ConfirmationURL }}"
+      style="
+        display: inline-block;
+        padding: 14px 22px;
+        background: #526c5a;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+      "
+      >Vérifier mon adresse et continuer</a
+    >
+  </p>
+  <p>
+    Si vous préférez saisir le code de connexion : <strong>{{ .Token }}</strong>
+  </p>
+  <p><a href="{{ .RedirectTo }}">Ouvrir la page pour saisir le code</a></p>
+  <p>
+    Une fois votre adresse vérifiée, confirmez l’invitation pour rejoindre votre
+    moitié. La connexion seule ne donne pas accès aux données du mariage.
+  </p>
+  <p style="font-size: 12px; color: #73796f">
+    Si vous n’êtes pas à l’origine de cette demande et n’attendez pas
+    d’invitation, ignorez cet email.
+  </p>
+</div>

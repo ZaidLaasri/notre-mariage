@@ -22,6 +22,8 @@ Budget consolidé et par cérémonie ; invités/foyers avec CSV ; tâches respon
 
 Un non-membre ne peut lire ni modifier de données ni télécharger les photos, même en appelant directement REST. Une référence vers un autre mariage est rejetée par FK composite. L'invitation est à usage unique, expirante, liée à l'email vérifié et limitée à deux membres. Les rôles ne sont pas modifiables depuis le client.
 
+Invitation par email : création préalable par le propriétaire via la RPC existante, puis demande d'envoi Supabase Auth (nouveau compte ou compte existant). Le lien contient le code spécifique de cette invitation ; il est retiré de l'URL à l'arrivée et l'utilisateur confirme l'acceptation après vérification d'adresse. Le renvoi réutilise ce même code ; une nouvelle invitation remplace l'ancienne. Un refus SMTP/quota est affiché avec le code manuel de secours. Un succès de l'API d'envoi ne garantit pas la livraison dans la boîte de réception. Voir `email-invitations.md` pour la configuration externe.
+
 ## Évolution métier
 
 Voir [les règles Jhaz, Moodboards et Timeline](functional-evolution.md). Le trousseau est distinct du Dfou3. Ses estimations ne deviennent des engagements qu'après action explicite et sa dépense peut être choisie dans le budget existant. Les moodboards partagent les photos entre les deux membres et préservent les anciennes inspirations non classées. La timeline du jour J est indépendante des tâches de préparation, accepte des activités parallèles signalées et sépare notes internes et programme prestataires. Makeup et Hair restent deux besoins ; un forfait commun ne crée aucun paiement automatique.

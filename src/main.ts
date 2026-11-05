@@ -7,6 +7,10 @@ const guard = () =>
   inject(Store).active() || inject(Router).createUrlTree(["/auth"]);
 const routes: Routes = [
   {
+    path: "rejoindre",
+    loadComponent: () => import("./app/features/join").then((m) => m.Join),
+  },
+  {
     path: "auth",
     loadComponent: () => import("./app/features/auth").then((m) => m.Auth),
   },

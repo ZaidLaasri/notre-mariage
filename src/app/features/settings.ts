@@ -4,6 +4,7 @@ import { Router } from "@angular/router";
 import { Store } from "../core/store";
 import { Photos } from "../core/photos";
 import { minor } from "../core/money";
+import { invitationEmail, invitationEmailError } from "../core/invitations";
 @Component({
   standalone: true,
   imports: [ReactiveFormsModule],
@@ -91,9 +92,9 @@ import { minor } from "../core/money";
         <section class="panel">
           <h2>Inviter ma moitié</h2>
           <p>
-            Le propriétaire peut générer un code à transmettre lui-même. Il
-            expire dans 48 h et ne fonctionne que pour l’adresse email vérifiée
-            indiquée.
+            Votre moitié reçoit un email pour vérifier son adresse et rejoindre
+            notre espace. L’invitation reste valable 48 h. Le lien de connexion
+            envoyé par email a sa propre durée de validité.
           </p>
           <form [formGroup]="invitation" (ngSubmit)="invite()">
             <label
@@ -101,16 +102,30 @@ import { minor } from "../core/money";
                 type="email"
                 formControlName="email" /></label
             ><button [disabled]="invitation.invalid || s.busy()">
-              Générer un code privé
+              Envoyer l’invitation par email
             </button>
           </form>
+          @if (invitedEmail()) {
+            <p role="status">{{ emailStatus() }}</p>
+            <button (click)="resendEmail()" [disabled]="s.busy()">
+              Renvoyer l’email à {{ invitedEmail() }}
+            </button>
+          }
           @if (token()) {
-            <label
-              >Code à transmettre en privé<textarea
-                readonly
-                [value]="token()"
-              ></textarea>
-            </label>
+            <details>
+              <summary>Solution de secours : transmettre le code privé</summary>
+              <p class="hint">
+                Votre moitié peut se connecter avec son compte, puis coller ce
+                code dans les paramètres. Une nouvelle invitation remplace la
+                précédente.
+              </p>
+              <label
+                >Code à transmettre en privé<textarea
+                  readonly
+                  [value]="token()"
+                ></textarea>
+              </label>
+            </details>
           }
         </section>
       }
@@ -168,6 +183,8 @@ export class Settings {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   readonly token = signal("");
+  readonly invitedEmail = signal("");
+  readonly emailStatus = signal("");
   readonly confirmReset = signal(false);
   readonly setup = this.fb.nonNullable.group({
     name: ["Notre Mariage", Validators.required],
@@ -224,9 +241,30 @@ export class Settings {
     });
   }
   invite() {
+    if (this.invitation.invalid) return;
     void this.s.run(async () => {
-      this.token.set(await this.s.invite(this.invitation.controls.email.value));
+      const email = invitationEmail(this.invitation.controls.email.value);
+      const token = await this.s.invite(email);
+      this.token.set(token);
+      this.invitedEmail.set(email);
+      this.emailStatus.set("Invitation créée. Envoi de l’email en cours…");
+      await this.deliver(email);
     });
+  }
+  private async deliver(email: string) {
+    try {
+      await this.s.sendPartnerEmail(email, this.token());
+      this.emailStatus.set(
+        "L’envoi a été accepté par Supabase. Votre moitié peut consulter sa boîte de réception et ses indésirables.",
+      );
+    } catch (error) {
+      this.emailStatus.set(invitationEmailError(error));
+      this.s.error.set(this.emailStatus());
+    }
+  }
+  resendEmail() {
+    if (!this.invitedEmail()) return;
+    void this.s.run(() => this.deliver(this.invitedEmail()));
   }
   addCategory() {
     if (this.category.invalid) return;

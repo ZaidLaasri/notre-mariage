@@ -122,7 +122,11 @@ export class App {
   private readonly router = inject(Router);
   constructor() {
     effect(() => {
-      if (this.s.ready() && !this.s.active())
+      if (
+        this.s.ready() &&
+        !this.s.active() &&
+        location.pathname !== "/rejoindre"
+      )
         void this.router.navigateByUrl("/auth");
     });
   }

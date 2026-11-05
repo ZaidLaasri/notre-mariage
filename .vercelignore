@@ -1,0 +1,10 @@
+.git/
+.vercel/
+.angular/
+.tools/
+.npm-cache/
+node_modules/
+dist/
+.env*
+src/runtime-config.json
+*.log

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { Store } from "../core/store";
 @Component({
   standalone: true,
@@ -73,6 +73,7 @@ import { Store } from "../core/store";
 export class Auth {
   readonly s = inject(Store);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   readonly signup = signal(false);
   readonly form = inject(FormBuilder).nonNullable.group({
     email: ["", [Validators.required, Validators.email]],
@@ -83,7 +84,12 @@ export class Auth {
     await this.s.run(async () => {
       const v = this.form.getRawValue();
       await this.s.auth(v.email, v.password, this.signup());
-      if (this.s.session()) await this.router.navigateByUrl("/");
+      if (this.s.session())
+        await this.router.navigateByUrl(
+          this.route.snapshot.queryParamMap.get("next") === "rejoindre"
+            ? "/rejoindre"
+            : "/",
+        );
     });
   }
   async demo() {
