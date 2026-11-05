@@ -23,7 +23,7 @@ https://notre-mariage-wheat.vercel.app/auth
 https://notre-mariage-wheat.vercel.app/rejoindre**
 ```
 
-Conserver les URLs localhost déjà utilisées pour le développement. L'enregistrement de ces paramètres n'a pas été effectué par l'agent, qui ne dispose pas d'un accès administrateur au dashboard Supabase. Tester ensuite la connexion, une photo et un email d'invitation depuis l'URL publique, avec les comptes du couple.
+Conserver les URLs localhost déjà utilisées pour le développement. Le propriétaire a confirmé l'enregistrement de ces paramètres le 5 novembre 2026. L'agent n'a pas accès au dashboard Supabase pour les relire. Tester ensuite la connexion, une photo et un email d'invitation depuis l'URL publique, avec les comptes du couple.
 
 ## Mises à jour
 
