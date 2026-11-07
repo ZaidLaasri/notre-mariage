@@ -1,5 +1,11 @@
 # Vérifications effectuées — 2 novembre 2026
 
+## Simplification des photos Dfou3/Tyafer — 7 novembre 2026
+
+Trente-quatre tests applicatifs passent. Trois tests supplémentaires vérifient le gestionnaire réel de suppression de la galerie avec Store et stockage Blob simulé : suppression de la dernière photo et fermeture de la fenêtre, maintien d'un index valide lorsqu'il reste des photos, conservation de la fenêtre/photo en cas d'erreur Storage. Aucun fichier réel du mariage n'a été supprimé pendant les tests.
+
+Les galeries `gift`/`gift_set` n'affichent plus les commandes de réorganisation ni le champ de légende ; leur action de suppression est dans la lightbox uniquement. Les autres types de galeries conservent leurs commandes. Les chargements d'image périmés ne remplacent plus la photo sélectionnée après une navigation/suppression. Le typecheck strict est réussi ; la compilation Angular vérifie les variantes du template. La vérification des interactions dans un véritable navigateur reste distincte de ces tests de gestionnaire et de compilation.
+
 ## Modification/suppression ensembles et Tyafer — 7 novembre 2026
 
 Typecheck strict et build de production réussis. Trente et un tests applicatifs passent, dont six nouveaux tests dans `tests/gift-sets.test.ts` : modification des ensembles/articles sans changement d'identifiant, conservation de la devise/fournisseur/livraison et des paiements, ouverture/annulation sans écriture, suppression complète des articles et photos Blob d'un ensemble, suppression d'un seul article sans ses voisins, refus d'une confirmation périmée, traitement d'un échec Storage sans faux succès.

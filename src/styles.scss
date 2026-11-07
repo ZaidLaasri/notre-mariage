@@ -1,4 +1,15 @@
 @use "sass:color";
+.lightbox-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+.dfou3-lightbox {
+  overflow-y: auto;
+}
+.lightbox.dfou3-lightbox img {
+  max-height: calc(100dvh - 220px);
+}
 .lightbox > .panel {
   color: var(--ink);
   max-height: calc(100dvh - 40px);
