@@ -37,6 +37,8 @@ Suivre [le guide de déploiement](docs/deployment.md). Les comptes et services e
 
 ## Fonctionnalités de cette version
 
+- Dfou3 / Tyafer : modification des ensembles (nom, couleur, cérémonie) et des articles/tayfour ; suppression avec confirmation du nombre d'articles et de photos concernés. Les dépenses/paiements sont conservés. Aucune migration supplémentaire nécessaire.
+
 - Navigation responsive, dashboard calculé depuis les données, cérémonies et budgets configurables.
 - Besoins et catégories ; prestataires réutilisables ; offres avec statut, prix, conditions, critères et favoris.
 - Photos multiples compressées WebP, miniatures, légendes, principale, carrousel et agrandissement.

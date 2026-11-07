@@ -1,4 +1,10 @@
 @use "sass:color";
+.lightbox > .panel {
+  color: var(--ink);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  width: min(560px, 100%);
+}
 .bulk-upload {
   background: #eef2e9;
   padding: 24px;

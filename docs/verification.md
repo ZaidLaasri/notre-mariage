@@ -1,5 +1,11 @@
 # Vérifications effectuées — 2 novembre 2026
 
+## Modification/suppression ensembles et Tyafer — 7 novembre 2026
+
+Typecheck strict et build de production réussis. Trente et un tests applicatifs passent, dont six nouveaux tests dans `tests/gift-sets.test.ts` : modification des ensembles/articles sans changement d'identifiant, conservation de la devise/fournisseur/livraison et des paiements, ouverture/annulation sans écriture, suppression complète des articles et photos Blob d'un ensemble, suppression d'un seul article sans ses voisins, refus d'une confirmation périmée, traitement d'un échec Storage sans faux succès.
+
+Ces tests utilisent les formulaires/services réels avec données de démonstration et IndexedDB simulée. Ils ne suppriment aucune donnée du mariage réel et n'attestent pas une recette visuelle sur téléphone. Le parcours réutilise les politiques RLS et FK existantes ; aucune migration additionnelle n'est nécessaire. La suppression Storage/PostgreSQL comporte plusieurs opérations et peut être partielle si une erreur intervient après certaines suppressions.
+
 ## Publication Vercel — 5 novembre 2026
 
 Application déployée et promue en production : https://notre-mariage-wheat.vercel.app. Plan Hobby vérifié, build distant réussi, déploiement READY. Les pages SPA de connexion/invitation/paramètres et les ressources initiales répondent HTTP 200. La configuration publique Supabase servie correspond aux paramètres locaux ; une requête anonyme n'expose aucun mariage. Build local et 25 tests applicatifs réussis avant publication.

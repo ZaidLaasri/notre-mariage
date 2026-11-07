@@ -1,14 +1,24 @@
-import { Component, inject, signal, computed } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ViewChild,
+  ElementRef,
+} from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { Store } from "../core/store";
-import { minor } from "../core/money";
+import { minor, convert } from "../core/money";
 import { Gallery } from "../shared/gallery";
 import { Calendar } from "../shared/calendar";
 import { Task, Gift, Outfit } from "../core/models";
+import { GiftSet } from "../core/models";
+import { GiftSets, Dfou3Deletion } from "../core/gift-sets";
+import { FocusTrap } from "../shared/focus-trap";
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, Gallery, Calendar],
+  imports: [ReactiveFormsModule, Gallery, Calendar, FocusTrap],
   template: `<div class="page-heading">
       <div>
         <span class="eyebrow">LES DÉTAILS QUI NOUS RESSEMBLENT</span>
@@ -97,8 +107,12 @@ import { Task, Gift, Outfit } from "../core/models";
       </section>
     }
     @if (mode === "dfou3") {
-      <section class="panel">
-        <h2>Créer un ensemble</h2>
+      <section class="panel" #setEditor>
+        <h2>
+          {{
+            editingSet() ? "Modifier l’ensemble / tayfour" : "Créer un ensemble"
+          }}
+        </h2>
         <p class="hint">
           Chaque famille compose son Dfou3 librement. Tyafer, tissus, parfums ou
           bijoux restent facultatifs.
@@ -117,8 +131,15 @@ import { Task, Gift, Outfit } from "../core/models";
               }
             </select></label
           ><button [disabled]="setForm.invalid || s.busy()">
-            Créer l’ensemble
+            {{
+              editingSet()
+                ? "Enregistrer les modifications"
+                : "Créer l’ensemble"
+            }}
           </button>
+          @if (editingSet()) {
+            <button type="button" (click)="cancelSet()">Annuler</button>
+          }
         </form>
       </section>
       <div class="ceremony-grid">
@@ -126,6 +147,17 @@ import { Task, Gift, Outfit } from "../core/models";
           <section class="panel">
             <span class="eyebrow">{{ set.color }}</span>
             <h2>{{ set.name }}</h2>
+            <div class="row wrap">
+              <button (click)="editSet(set)" [disabled]="s.busy()">
+                Modifier l’ensemble</button
+              ><button
+                class="danger"
+                (click)="askDeleteSet(set)"
+                [disabled]="s.busy()"
+              >
+                Supprimer l’ensemble
+              </button>
+            </div>
             <app-gallery [offerId]="set.id" kind="gift_set" [editable]="true" />
             <p>
               Coût prévu : {{ s.format(setTotal(set.id)) }} ·
@@ -150,6 +182,17 @@ import { Task, Gift, Outfit } from "../core/models";
                   ></label
                 >
               </div>
+              <div class="row wrap">
+                <button (click)="editGift(g)" [disabled]="s.busy()">
+                  Modifier l’article / tayfour</button
+                ><button
+                  class="danger"
+                  (click)="askDeleteGift(g)"
+                  [disabled]="s.busy()"
+                >
+                  Supprimer l’article
+                </button>
+              </div>
             } @empty {
               <p class="hint">
                 Ajoutez les articles de cet ensemble ci-dessous.
@@ -158,8 +201,14 @@ import { Task, Gift, Outfit } from "../core/models";
           </section>
         }
       </div>
-      <section class="panel">
-        <h2>Ajouter un cadeau ou un Tyafer</h2>
+      <section class="panel" #giftEditor>
+        <h2>
+          {{
+            editingGift()
+              ? "Modifier le cadeau / tayfour"
+              : "Ajouter un cadeau ou un tayfour"
+          }}
+        </h2>
         <form [formGroup]="giftForm" (ngSubmit)="addGift()" class="form-grid">
           <label
             >Ensemble<select formControlName="gift_set_id">
@@ -170,9 +219,14 @@ import { Task, Gift, Outfit } from "../core/models";
             </select></label
           ><label>Article<input formControlName="name" /></label
           ><label
-            >Prix unitaire MAD<input
+            >Prix unitaire<input
               formControlName="amount"
               inputmode="decimal" /></label
+          ><label
+            >Devise<select formControlName="currency">
+              <option>MAD</option>
+              <option>EUR</option>
+            </select></label
           ><label
             >Quantité<input
               formControlName="quantity"
@@ -184,14 +238,62 @@ import { Task, Gift, Outfit } from "../core/models";
           ><label
             >Tyafer de présentation<input formControlName="tyafer" /></label
           ><button class="primary" [disabled]="giftForm.invalid || s.busy()">
-            Ajouter l’article
+            {{
+              editingGift()
+                ? "Enregistrer les modifications"
+                : "Ajouter l’article"
+            }}
           </button>
+          @if (editingGift()) {
+            <button type="button" (click)="cancelGift()">Annuler</button>
+          }
         </form>
         <small class="hint"
           >Coût prévisionnel uniquement. Enregistrez les achats engagés dans le
           budget.</small
         >
       </section>
+      @if (deletion(); as request) {
+        <div
+          class="lightbox"
+          appFocusTrap
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dfou3-delete-title"
+          (keydown.escape)="cancelDeletion()"
+        >
+          <section class="panel narrow">
+            <h2 id="dfou3-delete-title">
+              {{
+                request.kind === "set"
+                  ? "Supprimer cet ensemble ?"
+                  : "Supprimer cet article / tayfour ?"
+              }}
+            </h2>
+            <p>{{ deletionName() }}</p>
+            <p>
+              {{ deletionCount() }} article(s) et
+              {{ request.photos.length }} photo(s) seront supprimés
+              définitivement. Les dépenses et paiements sont conservés.
+            </p>
+            <div class="row wrap">
+              <button
+                class="primary"
+                (click)="cancelDeletion()"
+                [disabled]="s.busy()"
+              >
+                Conserver</button
+              ><button
+                class="danger"
+                (click)="confirmDeletion()"
+                [disabled]="s.busy()"
+              >
+                Confirmer la suppression
+              </button>
+            </div>
+          </section>
+        </div>
+      }
     }
     @if (mode === "tenues") {
       <section class="panel">
@@ -253,6 +355,18 @@ import { Task, Gift, Outfit } from "../core/models";
 export class Planning {
   readonly s = inject(Store);
   private fb = inject(FormBuilder);
+  private readonly giftSets = inject(GiftSets);
+  @ViewChild("setEditor") private setEditor?: ElementRef<HTMLElement>;
+  @ViewChild("giftEditor") private giftEditor?: ElementRef<HTMLElement>;
+  private focusEditor(editor?: ElementRef<HTMLElement>) {
+    editor?.nativeElement.scrollIntoView({ block: "start" });
+    editor?.nativeElement
+      .querySelector<HTMLInputElement>("input")
+      ?.focus({ preventScroll: true });
+  }
+  readonly editingSet = signal("");
+  readonly editingGift = signal("");
+  readonly deletion = signal<Dfou3Deletion | null>(null);
   readonly mode =
     inject(ActivatedRoute).snapshot.routeConfig?.path ?? "planning";
   readonly title = (
@@ -298,9 +412,15 @@ export class Planning {
     name: ["", Validators.required],
     gift_set_id: ["", Validators.required],
     amount: ["0", Validators.required],
+    currency: ["MAD"],
     quantity: [
       1,
-      [Validators.required, Validators.min(1), Validators.max(1000)],
+      [
+        Validators.required,
+        Validators.min(1),
+        Validators.max(1000),
+        Validators.pattern(/^[1-9]\d*$/),
+      ],
     ],
     color: [""],
     material: [""],
@@ -362,18 +482,104 @@ export class Planning {
   }
   addSet() {
     if (this.setForm.invalid) return;
-    void this.s.run(
-      () => this.s.save("gift_sets", this.setForm.getRawValue()),
-      "Ensemble ajouté.",
-    );
+    void this.s.run(async () => {
+      const v = this.setForm.getRawValue();
+      if (!v.name.trim()) throw new Error("Indiquez le nom de l’ensemble.");
+      await this.s.save("gift_sets", {
+        id: this.editingSet() || undefined,
+        ...v,
+        name: v.name.trim(),
+      });
+      this.cancelSet();
+    }, "Ensemble enregistré.");
+  }
+  editSet(set: GiftSet) {
+    this.editingSet.set(set.id);
+    this.setForm.setValue({
+      name: set.name,
+      color: set.color,
+      ceremony_id: set.ceremony_id,
+    });
+    this.setForm.markAsPristine();
+    this.focusEditor(this.setEditor);
+  }
+  cancelSet() {
+    this.editingSet.set("");
+    this.setForm.reset();
+  }
+  editGift(gift: Gift) {
+    this.editingGift.set(gift.id);
+    this.giftForm.setValue({
+      name: gift.name,
+      gift_set_id: gift.gift_set_id,
+      amount: String(gift.amount_minor / 100),
+      currency: gift.currency,
+      quantity: gift.quantity,
+      color: gift.color,
+      material: gift.material,
+      tyafer: gift.tyafer,
+    });
+    this.giftForm.markAsPristine();
+    this.focusEditor(this.giftEditor);
+  }
+  cancelGift() {
+    this.editingGift.set("");
+    this.giftForm.reset();
+  }
+  askDeleteSet(set: GiftSet) {
+    try {
+      this.deletion.set(this.giftSets.prepareSet(set.id));
+    } catch (error) {
+      this.s.error.set(this.s.message(error));
+    }
+  }
+  askDeleteGift(gift: Gift) {
+    try {
+      this.deletion.set(this.giftSets.prepareGift(gift.id));
+    } catch (error) {
+      this.s.error.set(this.s.message(error));
+    }
+  }
+  cancelDeletion() {
+    if (!this.s.busy()) this.deletion.set(null);
+  }
+  deletionName() {
+    const r = this.deletion();
+    return r?.kind === "set" ? r.set.name : (r?.gift.name ?? "");
+  }
+  deletionCount() {
+    const r = this.deletion();
+    return r?.kind === "set" ? r.gifts.length : r ? 1 : 0;
+  }
+  confirmDeletion() {
+    const request = this.deletion();
+    if (!request) return;
+    void this.s.run(async () => {
+      await this.giftSets.remove(request);
+      if (request.kind === "set") {
+        if (this.editingSet() === request.set.id) this.cancelSet();
+        if (this.giftForm.controls.gift_set_id.value === request.set.id)
+          this.cancelGift();
+      } else if (this.editingGift() === request.gift.id) this.cancelGift();
+      this.deletion.set(null);
+    }, "Suppression terminée.");
   }
   gifts(id: string) {
     return this.s.data().gifts.filter((g) => g.gift_set_id === id);
   }
   setTotal(id: string) {
-    return this.gifts(id)
-      .filter((g) => g.currency === "MAD")
-      .reduce((sum, g) => sum + g.amount_minor * g.quantity, 0);
+    const w = this.s.wedding();
+    return this.gifts(id).reduce(
+      (sum, g) =>
+        sum +
+        convert(
+          g.amount_minor * g.quantity,
+          g.currency,
+          w?.eur_mad_numerator ?? 108,
+          w?.eur_mad_denominator ?? 10,
+        ),
+      0,
+    );
   }
   toggleGift(g: Gift) {
     void this.s.run(() =>
@@ -384,16 +590,23 @@ export class Planning {
     if (this.giftForm.invalid) return;
     void this.s.run(async () => {
       const { amount, ...v } = this.giftForm.getRawValue();
+      if (!v.name.trim()) throw new Error("Indiquez le nom de l’article.");
+      const previous = this.s
+        .data()
+        .gifts.find((g) => g.id === this.editingGift());
       await this.s.save("gifts", {
         ...v,
+        id: this.editingGift() || undefined,
+        name: v.name.trim(),
         amount_minor: minor(amount),
-        currency: "MAD",
-        provider_id: null,
-        purchased_on: null,
-        delivered: false,
+        currency: v.currency === "EUR" ? "EUR" : "MAD",
+        provider_id: previous?.provider_id ?? null,
+        purchased_on: previous?.purchased_on ?? null,
+        delivered: previous?.delivered ?? false,
       });
-      this.giftForm.controls.name.reset();
-    }, "Article ajouté.");
+      if (this.editingGift()) this.cancelGift();
+      else this.giftForm.controls.name.reset();
+    }, "Article enregistré.");
   }
   addOutfit() {
     if (this.outfitForm.invalid) return;
