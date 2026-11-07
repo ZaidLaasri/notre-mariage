@@ -1,5 +1,11 @@
 # Vérifications effectuées — 2 novembre 2026
 
+## Invités : édition, suppression et sélection des foyers — 7 novembre 2026
+
+Quarante-deux tests applicatifs passent, dont huit nouveaux contrôles dans `tests/guests.test.ts` : réutilisation d'un foyer et présélection du dernier foyer sans réécriture des coordonnées, création/validation d'un nouveau foyer, modification/déplacement d'un invité sans perdre ses invitations, refus d'un doublon dans le foyer de destination, annulation sans écriture, suppression limitée à la personne et à ses invitations, échec distant sans suppression locale, compatibilité CSV et détection des doublons. Les formulaires/services utilisent des données de démonstration ; aucune donnée du mariage réel n'est supprimée par les tests.
+
+Le typecheck strict est réussi. Le template Invités est extrait dans `guests.html` et sa compilation Angular est vérifiée par le build. La recette des clics et de l'affichage dans un navigateur réel reste distincte des tests de formulaire/service. Le schéma et la RLS ne sont pas modifiés.
+
 ## Simplification des photos Dfou3/Tyafer — 7 novembre 2026
 
 Trente-quatre tests applicatifs passent. Trois tests supplémentaires vérifient le gestionnaire réel de suppression de la galerie avec Store et stockage Blob simulé : suppression de la dernière photo et fermeture de la fenêtre, maintien d'un index valide lorsqu'il reste des photos, conservation de la fenêtre/photo en cas d'erreur Storage. Aucun fichier réel du mariage n'a été supprimé pendant les tests.

@@ -1,4 +1,11 @@
 @use "sass:color";
+.guest-row {
+  flex-wrap: wrap;
+}
+.guest-invitations {
+  flex-wrap: wrap;
+  min-width: 0;
+}
 .lightbox-actions {
   display: flex;
   justify-content: center;

@@ -1,135 +1,28 @@
-import { Component, inject, signal, computed } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ViewChild,
+  ElementRef,
+} from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Store } from "../core/store";
 import { csvCell, parseCsv, duplicateKey } from "../core/csv";
+import { Guest } from "../core/models";
+import { FocusTrap } from "../shared/focus-trap";
+interface GuestEntry {
+  name: string;
+  household: string;
+  side: string;
+  phone: string;
+  diet: string;
+  is_child: boolean;
+}
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule],
-  template: `<div class="page-heading">
-      <div>
-        <span class="eyebrow">CEUX QUI PARTAGENT NOTRE JOIE</span>
-        <h1>Nos invités</h1>
-        <p>Un carnet commun, des invitations propres à chaque cérémonie.</p>
-      </div>
-      <div class="row">
-        <button (click)="exportCsv()">Exporter CSV</button
-        ><label class="button"
-          >Importer CSV<input
-            class="sr-only"
-            type="file"
-            accept=".csv,text/csv"
-            (change)="importCsv($event)" /></label
-        ><button class="primary" (click)="show.set(!show())">
-          ＋ Un invité
-        </button>
-      </div>
-    </div>
-    <div class="stats-strip">
-      <span
-        ><strong>{{ s.data().guests.length }}</strong> invités uniques</span
-      ><span
-        ><strong>{{ s.data().guest_households.length }}</strong> foyers</span
-      ><span
-        ><strong>{{ confirmed() }}</strong> présences confirmées pour ce
-        filtre</span
-      >
-    </div>
-    <div class="filters">
-      <input
-        placeholder="Rechercher un nom ou un foyer"
-        aria-label="Recherche invités"
-        (input)="query.set(value($event))"
-      /><select
-        aria-label="Filtrer cérémonie"
-        (change)="ceremony.set(value($event))"
-      >
-        <option value="">Toutes les cérémonies</option>
-        @for (c of s.data().ceremonies; track c.id) {
-          <option [value]="c.id">{{ c.name }}</option>
-        }</select
-      ><select aria-label="Famille" (change)="side.set(value($event))">
-        <option value="">Toutes les familles</option>
-        <option>Mariée</option>
-        <option>Marié</option>
-        <option>Commun</option>
-      </select>
-    </div>
-    @if (show()) {
-      <section class="panel">
-        <h2>Ajouter une personne</h2>
-        <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
-          <label>Nom complet<input formControlName="name" /></label
-          ><label
-            >Foyer<input
-              formControlName="household"
-              placeholder="Famille…" /></label
-          ><label
-            >Famille<select formControlName="side">
-              <option>Commun</option>
-              <option>Mariée</option>
-              <option>Marié</option>
-            </select></label
-          ><label
-            >Téléphone du foyer<input
-              formControlName="phone"
-              type="tel" /></label
-          ><label>Régime alimentaire<input formControlName="diet" /></label
-          ><label class="choice"
-            ><input type="checkbox" formControlName="is_child" />Enfant</label
-          ><button class="primary" [disabled]="form.invalid || s.busy()">
-            Ajouter l’invité
-          </button>
-        </form>
-      </section>
-    }
-    <section class="panel">
-      <p class="hint">
-        CSV : nom,foyer,famille,telephone,enfant,regime. L’import ajoute les
-        personnes sans créer automatiquement d’invitations. Les doublons nom +
-        foyer sont ignorés.
-      </p>
-      @for (h of households(); track h.id) {
-        <div class="household">
-          <h2>
-            {{ h.name }} <span class="pill">{{ h.side }}</span>
-          </h2>
-          <small>{{ h.phone }}</small>
-          @for (g of people(h.id); track g.id) {
-            <div class="guest-row">
-              <div>
-                <strong>{{ g.name }}</strong
-                ><small
-                  >{{ g.is_child ? "Enfant" : "Adulte" }} ·
-                  {{ g.diet || "Aucun régime précisé" }}</small
-                >
-              </div>
-              <div class="guest-invitations">
-                @for (c of s.data().ceremonies; track c.id) {
-                  <label
-                    >{{ c.name
-                    }}<select
-                      [value]="status(g.id, c.id)"
-                      (change)="invite(g.id, c.id, $event)"
-                    >
-                      <option value="">Non concerné</option>
-                      <option>À inviter</option>
-                      <option>Envoyée</option>
-                      <option>Confirmée</option>
-                      <option>Refusée</option>
-                    </select></label
-                  >
-                }
-              </div>
-            </div>
-          }
-        </div>
-      } @empty {
-        <div class="empty">
-          <h2>Qui sera à nos côtés ?</h2>
-          <p>Ajoutez vos proches ou importez votre carnet CSV.</p>
-        </div>
-      }
-    </section>`,
+  imports: [ReactiveFormsModule, FocusTrap],
+  templateUrl: "./guests.html",
 })
 export class Guests {
   readonly s = inject(Store);
@@ -137,14 +30,24 @@ export class Guests {
   readonly ceremony = signal("");
   readonly side = signal("");
   readonly show = signal(false);
+  readonly editing = signal("");
+  readonly deleting = signal<Guest | null>(null);
+  readonly lastHousehold = signal("");
+  @ViewChild("guestEditor") private guestEditor?: ElementRef<HTMLElement>;
   readonly form = inject(FormBuilder).nonNullable.group({
     name: ["", Validators.required],
-    household: ["", Validators.required],
+    household_id: ["", Validators.required],
+    household: [""],
     side: ["Commun"],
     phone: [""],
     diet: [""],
     is_child: [false],
   });
+  readonly householdOptions = computed(() =>
+    [...this.s.data().guest_households].sort((a, b) =>
+      a.name.localeCompare(b.name, "fr"),
+    ),
+  );
   readonly confirmed = computed(
     () =>
       this.s
@@ -213,57 +116,143 @@ export class Guests {
         });
     });
   }
-  async add(v: {
-    name: string;
-    household: string;
-    side: string;
-    phone: string;
-    diet: string;
-    is_child: boolean;
-  }): Promise<boolean> {
-    let h = this.s
+  selectedHousehold() {
+    return this.s
       .data()
       .guest_households.find(
-        (h) => h.name.trim().toLowerCase() === v.household.trim().toLowerCase(),
+        (h) => h.id === this.form.controls.household_id.value,
       );
+  }
+  selectHousehold(id: string) {
+    this.form.controls.household_id.setValue(id);
+    this.form.controls.household.setValidators(
+      id === "new" ? [Validators.required] : [],
+    );
+    this.form.controls.household.updateValueAndValidity();
+  }
+  edit(guest?: Guest) {
+    this.editing.set(guest?.id ?? "");
+    const household_id =
+      guest?.household_id ??
+      (this.s.data().guest_households.some((h) => h.id === this.lastHousehold())
+        ? this.lastHousehold()
+        : this.s.data().guest_households.length
+          ? ""
+          : "new");
+    this.form.reset({
+      name: guest?.name ?? "",
+      household_id,
+      household: "",
+      side: "Commun",
+      phone: "",
+      diet: guest?.diet ?? "",
+      is_child: guest?.is_child ?? false,
+    });
+    this.selectHousehold(household_id);
+    this.show.set(true);
+    setTimeout(() => {
+      this.guestEditor?.nativeElement.scrollIntoView({ block: "start" });
+      this.guestEditor?.nativeElement
+        .querySelector<HTMLInputElement>("input")
+        ?.focus({ preventScroll: true });
+    }, 0);
+  }
+  cancelEdit() {
+    this.show.set(false);
+    this.editing.set("");
+    this.form.reset();
+    this.selectHousehold("");
+  }
+  askDelete(guest: Guest) {
+    this.deleting.set({ ...guest });
+  }
+  cancelDelete() {
+    if (!this.s.busy()) this.deleting.set(null);
+  }
+  confirmDelete() {
+    const guest = this.deleting();
+    if (!guest) return;
+    void this.s.run(async () => {
+      // PostgreSQL cascades ceremony invitations in the same DELETE statement.
+      await this.s.remove("guests", guest.id);
+      this.s.data.update((d) => ({
+        ...d,
+        ceremony_invitations: d.ceremony_invitations.filter(
+          (i) => i.guest_id !== guest.id,
+        ),
+      }));
+      this.s.persist();
+      if (this.editing() === guest.id) this.cancelEdit();
+      this.deleting.set(null);
+    }, "Invité supprimé.");
+  }
+  async add(
+    v: GuestEntry,
+    editingId?: string,
+    householdId?: string,
+  ): Promise<boolean> {
+    if (!v.name.trim()) throw new Error("Indiquez le nom de l’invité.");
+    if (editingId && !this.s.data().guests.some((g) => g.id === editingId))
+      throw new Error("Cet invité n’est plus disponible. Actualisez la liste.");
+    let h = householdId
+      ? this.s.data().guest_households.find((h) => h.id === householdId)
+      : this.s
+          .data()
+          .guest_households.find(
+            (h) =>
+              h.name.trim().toLowerCase() === v.household.trim().toLowerCase(),
+          );
+    if (householdId && !h)
+      throw new Error("Le foyer sélectionné n’est plus disponible.");
+    const householdName = h?.name ?? v.household.trim();
+    if (!householdName) throw new Error("Indiquez le nom du nouveau foyer.");
     if (
       this.s
         .data()
         .guests.some(
           (g) =>
+            g.id !== editingId &&
             duplicateKey(
               g.name,
               this.s
                 .data()
                 .guest_households.find((h) => h.id === g.household_id)?.name ??
                 "",
-            ) === duplicateKey(v.name, v.household),
+            ) === duplicateKey(v.name, householdName),
         )
     )
       return false;
     if (!h)
       h = await this.s.save("guest_households", {
-        name: v.household.trim(),
+        name: householdName,
         side: v.side,
         phone: v.phone,
         notes: "",
       });
     await this.s.save("guests", {
+      id: editingId || undefined,
       household_id: h.id,
       name: v.name.trim(),
       diet: v.diet,
       is_child: v.is_child,
     });
+    this.lastHousehold.set(h.id);
     return true;
   }
   save() {
     if (this.form.invalid) return;
     void this.s.run(async () => {
-      if (!(await this.add(this.form.getRawValue())))
+      const { household_id, ...v } = this.form.getRawValue();
+      if (
+        !(await this.add(
+          v,
+          this.editing() || undefined,
+          household_id === "new" ? undefined : household_id,
+        ))
+      )
         throw new Error("Cette personne figure déjà dans ce foyer.");
-      this.show.set(false);
-      this.form.reset();
-    }, "Invité ajouté.");
+      this.cancelEdit();
+    }, "Invité enregistré.");
   }
   exportCsv() {
     const rows = this.s.data().guests.map((g) => {

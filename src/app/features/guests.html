@@ -1,0 +1,168 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">CEUX QUI PARTAGENT NOTRE JOIE</span>
+    <h1>Nos invités</h1>
+    <p>Un carnet commun, des invitations propres à chaque cérémonie.</p>
+  </div>
+  <div class="row wrap">
+    <button (click)="exportCsv()">Exporter CSV</button
+    ><label class="button"
+      >Importer CSV<input
+        class="sr-only"
+        type="file"
+        accept=".csv,text/csv"
+        (change)="importCsv($event)" /></label
+    ><button class="primary" (click)="edit()">＋ Un invité</button>
+  </div>
+</div>
+<div class="stats-strip">
+  <span><strong>{{s.data().guests.length}}</strong> invités uniques</span
+  ><span><strong>{{s.data().guest_households.length}}</strong> foyers</span
+  ><span
+    ><strong>{{confirmed()}}</strong> présences confirmées pour ce filtre</span
+  >
+</div>
+<div class="filters">
+  <input
+    placeholder="Rechercher un nom ou un foyer"
+    aria-label="Recherche invités"
+    (input)="query.set(value($event))"
+  /><select
+    aria-label="Filtrer cérémonie"
+    (change)="ceremony.set(value($event))"
+  >
+    <option value="">Toutes les cérémonies</option>
+    @for(c of s.data().ceremonies;track c.id){
+    <option [value]="c.id">{{c.name}}</option>
+    }</select
+  ><select aria-label="Famille" (change)="side.set(value($event))">
+    <option value="">Toutes les familles</option>
+    <option>Mariée</option>
+    <option>Marié</option>
+    <option>Commun</option>
+  </select>
+</div>
+@if(show()){
+<section class="panel" #guestEditor>
+  <h2>{{editing()?'Modifier l’invité':'Ajouter une personne'}}</h2>
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+    <label>Nom complet<input formControlName="name" /></label
+    ><label
+      >Foyer<select
+        formControlName="household_id"
+        (change)="selectHousehold(value($event))"
+      >
+        <option value="">Choisir un foyer</option>
+        @for(h of householdOptions();track h.id){
+        <option [value]="h.id">{{h.name}} · {{h.side}}</option>
+        }
+        <option value="new">＋ Créer un nouveau foyer</option>
+      </select></label
+    >
+    @if(form.controls.household_id.value==='new'){<label
+      >Nom du nouveau foyer<input
+        formControlName="household"
+        placeholder="Famille…" /></label
+    ><label
+      >Famille du nouveau foyer<select formControlName="side">
+        <option>Commun</option>
+        <option>Mariée</option>
+        <option>Marié</option>
+      </select></label
+    ><label
+      >Téléphone du nouveau foyer<input
+        formControlName="phone"
+        type="tel" /></label
+    >}@else if(selectedHousehold();as h){
+    <p class="hint">
+      Foyer sélectionné : {{h.name}} · {{h.side}} · {{h.phone||'Téléphone non
+      renseigné'}}. Ces informations sont communes à ce foyer.
+    </p>
+    } <label>Régime alimentaire<input formControlName="diet" /></label
+    ><label class="choice"
+      ><input type="checkbox" formControlName="is_child" />Enfant</label
+    >
+    <div class="form-actions">
+      <button class="primary" [disabled]="form.invalid||s.busy()">
+        {{editing()?'Enregistrer les modifications':'Ajouter l’invité'}}</button
+      ><button type="button" (click)="cancelEdit()" [disabled]="s.busy()">
+        Annuler
+      </button>
+    </div>
+  </form>
+</section>
+}
+<section class="panel">
+  <p class="hint">
+    CSV : nom,foyer,famille,telephone,enfant,regime. L’import ajoute les
+    personnes sans créer automatiquement d’invitations. Les doublons nom + foyer
+    sont ignorés.
+  </p>
+  @for(h of households();track h.id){
+  <div class="household">
+    <h2>{{h.name}} <span class="pill">{{h.side}}</span></h2>
+    <small>{{h.phone}}</small>@for(g of people(h.id);track g.id){
+    <div class="guest-row">
+      <div>
+        <strong>{{g.name}}</strong
+        ><small
+          >{{g.is_child?'Enfant':'Adulte'}} · {{g.diet||'Aucun régime
+          précisé'}}</small
+        >
+      </div>
+      <div class="guest-invitations">
+        @for(c of s.data().ceremonies;track c.id){<label
+          >{{c.name}}<select
+            [value]="status(g.id,c.id)"
+            (change)="invite(g.id,c.id,$event)"
+            [disabled]="s.busy()"
+          >
+            <option value="">Non concerné</option>
+            <option>À inviter</option>
+            <option>Envoyée</option>
+            <option>Confirmée</option>
+            <option>Refusée</option>
+          </select></label
+        >}
+      </div>
+      <div class="row wrap">
+        <button (click)="edit(g)" [disabled]="s.busy()">Modifier</button
+        ><button class="danger" (click)="askDelete(g)" [disabled]="s.busy()">
+          Supprimer
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+  }@empty{
+  <div class="empty">
+    <h2>Qui sera à nos côtés ?</h2>
+    <p>Ajoutez vos proches ou importez votre carnet CSV.</p>
+  </div>
+  }
+</section>
+@if(deleting();as g){
+<div
+  class="lightbox"
+  appFocusTrap
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="guest-delete-title"
+  (keydown.escape)="cancelDelete()"
+>
+  <section class="panel narrow">
+    <h2 id="guest-delete-title">Supprimer cet invité ?</h2>
+    <p>
+      <strong>{{g.name}}</strong> et ses invitations aux cérémonies seront
+      supprimés. Son foyer et les autres invités seront conservés.
+    </p>
+    <div class="row wrap">
+      <button class="primary" (click)="cancelDelete()" [disabled]="s.busy()">
+        Conserver</button
+      ><button class="danger" (click)="confirmDelete()" [disabled]="s.busy()">
+        Confirmer la suppression
+      </button>
+    </div>
+  </section>
+</div>
+}
