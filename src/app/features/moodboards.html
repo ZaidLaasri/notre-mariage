@@ -153,6 +153,7 @@
 <div class="filters">
   <input
     aria-label="Rechercher les inspirations"
+    [value]="query()"
     placeholder="Un titre, une couleur, un tag…"
     (input)="query.set(value($event))"
   /><select
@@ -166,6 +167,7 @@
     }</select
   ><select
     aria-label="Cérémonie des inspirations"
+    [value]="ceremony()"
     (change)="ceremony.set(value($event))"
   >
     <option value="">Toutes les cérémonies</option>

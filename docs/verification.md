@@ -2,6 +2,8 @@
 
 ## Moodboard canvas — 22 novembre 2026
 
+Correction de visibilité après import : **54 tests passent**, dont le cadrage automatique d'une photo ajoutée hors écran sur une largeur mobile et un import avec filtres actifs. Ces tests vérifient que la photo est incluse dans les résultats et le cadrage, que ses coordonnées restent inchangées et qu'une simple modification de titre conserve la navigation manuelle. Les tests restent exécutés sans navigateur ; la compilation de production vérifie l'intégration Angular.
+
 - Suite complète : **52 tests réussis**. TypeScript strict, build de production Angular et `git diff --check` validés, y compris après l'ajout du déplacement directement sur l'image.
 - Tests des coordonnées négatives, des déplacements à différents zooms, du zoom centré, du cadrage sur une largeur mobile, des Pointer Events et de leur annulation, du clic/toucher sur une photo, de la persistance sans modifier les métadonnées ou médias, des erreurs de sauvegarde et des filtres stables.
 - Migration 005 exécutée dans une base PostgreSQL locale jetable via `tests/migration-upgrade.mjs` : préservation des anciennes données et chemins privés, partage des coordonnées et métadonnées photo entre deux membres, refus de lecture et modification pour un tiers, rejet des positions invalides.

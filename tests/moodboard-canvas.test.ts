@@ -135,6 +135,35 @@ test("panning and cancelled drags never write photo coordinates", () => {
   page.end(event(50, 50));
   assert.equal(changes.length, 0);
 });
+test("new offscreen photos are framed automatically without changing saved positions", () => {
+  const { page } = canvas();
+  const first = { ...demoData().inspirations[0], canvas_x: 0, canvas_y: 0 };
+  const items = signal([first]);
+  Object.assign(page, {
+    items,
+    scope: () => "board",
+    visibleIds: new Set(),
+    viewScope: undefined,
+    viewport: { nativeElement: { clientWidth: 360, clientHeight: 480 } },
+  });
+  page.syncView();
+  items.set([
+    first,
+    { ...first, id: "new-photo", canvas_x: -500, canvas_y: 1800 },
+  ]);
+  page.syncView();
+  for (const photo of items()) {
+    const x = photo.canvas_x * page.zoom() + page.pan().x;
+    const y = photo.canvas_y * page.zoom() + page.pan().y;
+    assert.ok(x >= 0 && x + 240 * page.zoom() <= 360);
+    assert.ok(y >= 0 && y + 270 * page.zoom() <= 480);
+  }
+  assert.equal(items()[1].canvas_y, 1800);
+  page.pan.set({ x: -777, y: 99 });
+  items.update((rows) => rows.map((i) => ({ ...i, name: "Updated title" })));
+  page.syncView();
+  assert.deepEqual(page.pan(), { x: -777, y: 99 });
+});
 function setup() {
   const s = new Store();
   s.demo.set(true);
@@ -157,6 +186,43 @@ function setup() {
 async function settled(s: Store) {
   while (s.busy()) await new Promise((r) => setTimeout(r, 0));
 }
+test("successful photo import clears filters hiding the newly added inspiration", async () => {
+  const { s, page, injector } = setup();
+  try {
+    const board = s.data().moodboards[0];
+    page.board.set(board.id);
+    page.query.set("no-match");
+    page.theme.set("unrelated");
+    page.ceremony.set("other");
+    const photos = injector.get(Photos);
+    photos.upload = async (_file, id) => {
+      await s.save("attachments", {
+        inspiration_id: id,
+        path: "test/photo.webp",
+        thumbnail_path: "test/thumb.webp",
+        caption: "Test",
+        position: 0,
+        is_cover: true,
+        size_bytes: 10,
+      });
+    };
+    const input = {
+      files: [
+        new File(["photo"], "nouvelle-photo.jpg", { type: "image/jpeg" }),
+      ],
+      value: "file",
+    };
+    await page.importImages({ target: input } as unknown as Event);
+    assert.equal(s.error(), "");
+    assert.equal(page.query(), "");
+    assert.equal(page.theme(), "");
+    assert.equal(page.ceremony(), "");
+    assert.ok(page.canvasIdeas().some((i) => i.name === "nouvelle-photo"));
+    assert.equal(input.value, "");
+  } finally {
+    injector.destroy();
+  }
+});
 test("saving a position preserves all metadata, comments and photos; filtering does not move it", async () => {
   const { s, page, injector } = setup();
   try {

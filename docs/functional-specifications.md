@@ -2,6 +2,8 @@
 
 ## Moodboard : canvas libre — 22 novembre 2026
 
+Le canvas cadre automatiquement toutes les photos à l'ouverture d'un moodboard et à l'arrivée d'une nouvelle inspiration, après le rendu de la zone visible. Les mises à jour d'une fiche ou le déplacement d'une photo ne réinitialisent pas le cadrage manuel. Après un import réussi, la recherche et les filtres de thème/cérémonie du board actif sont effacés pour ne pas masquer les images ajoutées ; les champs visibles reflètent cette remise à zéro.
+
 Chaque moodboard possède un canvas à coordonnées libres. Glisser une photo ou sa poignée permet de la placer à gauche, à droite, au-dessus ou en dessous des autres, y compris aux coordonnées négatives. Le fond se déplace à la souris ou au doigt. Les boutons de zoom, le raccourci Ctrl/molette (ou Cmd/molette), « Tout voir » et « 100 % » permettent de naviguer. Le zoom et le cadrage sont locaux à l'appareil ; les positions sont partagées et enregistrées une fois à la fin du geste. Échap ou une interruption tactile annule le déplacement sans enregistrer.
 
 Un clic ou toucher bref sur une photo ouvre sa fiche sous le canvas, avec galerie agrandie, import, associations et commentaires existants. La vue fiches et ses filtres restent disponibles. La vue globale sans moodboard affiche les fiches pour éviter de superposer plusieurs boards. Le clavier permet de déplacer une photo avec les flèches depuis sa poignée (10 unités, ou 50 avec Maj), et d'explorer le fond avec les flèches depuis le canvas. Les contrôles restent accessibles sur mobile ; le pincement à deux doigts n'est pas implémenté.

@@ -300,6 +300,11 @@ export class Moodboards {
           });
           id = idea.id;
           await this.photos.upload(file, id, "inspiration");
+          if (this.board() === board.id) {
+            this.query.set("");
+            this.theme.set("");
+            this.ceremony.set("");
+          }
           done++;
         } catch (e) {
           if (id && !this.photos.list(id, "inspiration").length)

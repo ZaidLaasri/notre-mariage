@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   ViewChild,
+  afterRenderEffect,
   computed,
   effect,
   inject,
@@ -102,6 +103,8 @@ import {
   styleUrl: "./moodboard-canvas.scss",
 })
 export class MoodboardCanvas {
+  private visibleIds = new Set<string>();
+  private viewScope: string | undefined;
   readonly items = input.required<Inspiration[]>();
   readonly busy = input(false);
   readonly scope = input("");
@@ -129,10 +132,7 @@ export class MoodboardCanvas {
       `translate(${this.pan().x}px, ${this.pan().y}px) scale(${this.zoom()})`,
   );
   constructor() {
-    effect(() => {
-      this.scope();
-      this.reset();
-    });
+    afterRenderEffect(() => this.syncView());
     effect((onCleanup) => {
       const items = this.items();
       let active = true;
@@ -163,6 +163,18 @@ export class MoodboardCanvas {
           if (active) this.store.error.set(this.store.message(error));
         });
     });
+  }
+  syncView() {
+    const scope = this.scope();
+    const items = this.items();
+    const added = items.some((i) => !this.visibleIds.has(i.id));
+    const changedBoard = this.viewScope !== scope;
+    this.visibleIds = new Set(items.map((i) => i.id));
+    this.viewScope = scope;
+    if (changedBoard || added) {
+      this.cancel();
+      this.fit();
+    }
   }
   point(item: Inspiration, index: number) {
     return this.draft()?.id === item.id
