@@ -1,5 +1,12 @@
 # Vérifications effectuées — 2 novembre 2026
 
+## Moodboard canvas — 22 novembre 2026
+
+- Suite complète : **52 tests réussis**. TypeScript strict, build de production Angular et `git diff --check` validés, y compris après l'ajout du déplacement directement sur l'image.
+- Tests des coordonnées négatives, des déplacements à différents zooms, du zoom centré, du cadrage sur une largeur mobile, des Pointer Events et de leur annulation, du clic/toucher sur une photo, de la persistance sans modifier les métadonnées ou médias, des erreurs de sauvegarde et des filtres stables.
+- Migration 005 exécutée dans une base PostgreSQL locale jetable via `tests/migration-upgrade.mjs` : préservation des anciennes données et chemins privés, partage des coordonnées et métadonnées photo entre deux membres, refus de lecture et modification pour un tiers, rejet des positions invalides.
+- Le navigateur intégré ne fournit aucun navigateur disponible lors de cette session. Les tests de gestes sont automatisés sans rendu ; la recette visuelle et tactile sur un appareil réel reste à effectuer. Aucun déplacement de photo réelle ni application de migration distante n'est présumé par ces tests.
+
 ## Invités : édition, suppression et sélection des foyers — 7 novembre 2026
 
 Quarante-deux tests applicatifs passent, dont huit nouveaux contrôles dans `tests/guests.test.ts` : réutilisation d'un foyer et présélection du dernier foyer sans réécriture des coordonnées, création/validation d'un nouveau foyer, modification/déplacement d'un invité sans perdre ses invitations, refus d'un doublon dans le foyer de destination, annulation sans écriture, suppression limitée à la personne et à ses invitations, échec distant sans suppression locale, compatibilité CSV et détection des doublons. Les formulaires/services utilisent des données de démonstration ; aucune donnée du mariage réel n'est supprimée par les tests.

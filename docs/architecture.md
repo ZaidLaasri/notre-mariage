@@ -1,5 +1,9 @@
 # Architecture
 
+## Canvas des inspirations
+
+`shared/moodboard-canvas.ts` utilise les Pointer Events natifs (souris, stylet et tactile) et une transformation CSS translate/scale, sans dépendance ni service payant. Les vignettes proviennent de `Photos` via les URLs privées existantes ; les opérations de galerie restent dans la fiche détaillée, en dehors du conteneur transformé. Le composant émet une position à la fin d'un déplacement, pas à chaque mouvement. `Moodboards` valide puis enregistre via `Store.save`, qui conserve la gestion des conflits `updated_at`. Les fonctions géométriques sont isolées dans `core/moodboard-canvas.ts` et testées. Les réponses asynchrones obsolètes des vignettes sont ignorées après changement de board.
+
 Angular standalone, TypeScript strict, Signals pour l'état local et les calculs dérivés, Router et pages chargées à la demande, Reactive Forms, SCSS sans framework UI lourd. SDK officiel Supabase directement dans les services. Aucune API serveur personnalisée ni clé service_role côté navigateur.
 
 `core` : modèles, calculs monétaires purs, auth, persistance et Storage. `features` : écrans métier. `layout` : navigation desktop/mobile. `shared` : galerie et présentation réutilisable. Les opérations sensibles multi-tables (espace, invitation, réservation/paiements) utilisent PostgreSQL/RPC transactionnelles. La RLS, pas les guards Angular, protège les données.

@@ -167,6 +167,8 @@ export interface OutfitItem extends Row {
   amount_minor: number;
 }
 export interface Inspiration extends Row {
+  canvas_x?: number | null;
+  canvas_y?: number | null;
   moodboard_id?: string | null;
   description?: string;
   colors?: string[];

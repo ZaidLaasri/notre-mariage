@@ -1,5 +1,9 @@
 # Modèle relationnel
 
+## Positions du moodboard (migration 005)
+
+`inspirations.canvas_x` et `canvas_y` sont des coordonnées `double precision` optionnelles, exprimées en unités du canvas indépendantes du zoom. Une contrainte impose soit deux valeurs nulles, soit deux valeurs finies comprises entre -1 000 000 et 1 000 000. Cette borne technique protège les calculs du navigateur ; elle ne limite pas le nombre d'articles. Une reprise additive initialise les photos existantes par mariage/moodboard, selon `position`, nom puis UUID. Aucun média n'est déplacé ou supprimé, aucune politique RLS n'est remplacée. La colonne `position` reste disponible pour la vue fiches et ses fonctions de tri existantes.
+
 Toutes les données métier portent wedding_id. Une clé unique (wedding_id,id) et des FK composites empêchent les liens entre deux mariages. UUID pour les identifiants, timestamps, index wedding_id, suppression explicite des parents avec dépendances. Les photos doivent être retirées via Storage avant leur métadonnée ; aucune cascade SQL ne supprime un fichier Storage.
 
 ```mermaid

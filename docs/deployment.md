@@ -1,5 +1,9 @@
 # Installation, Supabase, Vercel et sauvegardes
 
+## Mise à jour canvas (005)
+
+Avant de publier le frontend du canvas, sauvegarder puis exécuter **uniquement** `supabase/migrations/005_moodboard_canvas.sql` dans Supabase → SQL Editor → New query → Run, sur le projet déjà migré en 004. La migration ajoute les coordonnées et initialise la disposition existante sans supprimer les inspirations ni les fichiers. Ne pas réexécuter 001–004. Après succès, déployer le frontend, ouvrir un moodboard, déplacer une photo et rafraîchir ; vérifier la même position sur le second compte. Aucun accès administrateur n'est nécessaire dans Angular. Le déploiement ne doit pas précéder cette migration, car les nouvelles créations envoient les coordonnées à Supabase.
+
 ## Supabase
 
 Créer manuellement un projet Free, idéalement dans une région proche. Ne pas activer de module payant. Dans SQL Editor, exécuter les migrations versionnées `001_initial.sql`, `002_decisions.sql`, `003_media.sql`, `004_wedding_extensions.sql` dans cet ordre une fois sur une base vierge. Pour un projet déjà en 003, sauvegarder puis appliquer **uniquement 004** ; ne pas recréer les anciennes tables. Conserver les migrations suivantes dans le même dossier ; utiliser ensuite la CLI Supabase et `supabase db push` avec un projet lié si souhaité. Ne jamais conserver le mot de passe de base en Git.

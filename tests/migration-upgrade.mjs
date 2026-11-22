@@ -90,6 +90,127 @@ try {
   console.log(
     "PASS additive upgrade preserves existing providers, inspirations and private photo metadata",
   );
+  await client.query(
+    readFileSync("supabase/migrations/005_moodboard_canvas.sql", "utf8"),
+  );
+  const located = (
+    await client.query("select * from public.inspirations where id=$1", [
+      idea.id,
+    ])
+  ).rows[0];
+  assert.equal(located.canvas_x, 0);
+  assert.equal(located.canvas_y, 0);
+  for (const key of Object.keys(after)) {
+    if (key !== "updated_at") assert.deepEqual(located[key], after[key]);
+  }
+  assert.equal(
+    (
+      await client.query("select path from public.attachments where id=$1", [
+        attachment.id,
+      ])
+    ).rows[0].path,
+    media.path,
+  );
+  const partner = randomUUID(),
+    stranger = randomUUID();
+  await client.query(
+    "insert into auth.users(id,email,email_confirmed_at) values($1,$2,now()),($3,$4,now())",
+    [
+      partner,
+      "canvas-partner@example.test",
+      stranger,
+      "canvas-stranger@example.test",
+    ],
+  );
+  await client.query("set role authenticated");
+  await client.query("select set_config('request.jwt.claim.sub',$1,false)", [
+    uid,
+  ]);
+  const token = (
+    await client.query(
+      "select public.invite_partner('canvas-partner@example.test') as token",
+    )
+  ).rows[0].token;
+  await client.query(
+    "update public.inspirations set canvas_x=-280,canvas_y=640 where id=$1",
+    [idea.id],
+  );
+  await client.query("select set_config('request.jwt.claim.sub',$1,false)", [
+    partner,
+  ]);
+  await client.query("select public.accept_invitation($1)", [token]);
+  assert.equal(
+    (
+      await client.query(
+        "select canvas_x from public.inspirations where id=$1",
+        [idea.id],
+      )
+    ).rows[0].canvas_x,
+    -280,
+  );
+  assert.equal(
+    (
+      await client.query(
+        "select count(*)::integer n from public.attachments where id=$1",
+        [attachment.id],
+      )
+    ).rows[0].n,
+    1,
+  );
+  await client.query(
+    "update public.inspirations set canvas_y=-500 where id=$1",
+    [idea.id],
+  );
+  await assert.rejects(
+    () =>
+      client.query(
+        "update public.inspirations set canvas_x='NaN'::float8 where id=$1",
+        [idea.id],
+      ),
+    /inspiration_canvas_coordinates/,
+  );
+  await assert.rejects(
+    () =>
+      client.query(
+        "update public.inspirations set canvas_x=1000001 where id=$1",
+        [idea.id],
+      ),
+    /inspiration_canvas_coordinates/,
+  );
+  await client.query("select set_config('request.jwt.claim.sub',$1,false)", [
+    stranger,
+  ]);
+  assert.equal(
+    (
+      await client.query(
+        "select count(*)::integer n from public.inspirations where id=$1",
+        [idea.id],
+      )
+    ).rows[0].n,
+    0,
+  );
+  assert.equal(
+    (
+      await client.query(
+        "update public.inspirations set canvas_x=123 where id=$1",
+        [idea.id],
+      )
+    ).rowCount,
+    0,
+  );
+  assert.equal(
+    (
+      await client.query(
+        "select count(*)::integer n from public.attachments where id=$1",
+        [attachment.id],
+      )
+    ).rows[0].n,
+    0,
+  );
+  await client.query("reset role");
+  console.log(
+    "PASS canvas upgrade preserves photos; partners share positions and media; outsiders cannot read or move cards; invalid positions rejected",
+  );
 } finally {
   if (client) await client.end();
   await admin.query(`drop database if exists ${name}`);

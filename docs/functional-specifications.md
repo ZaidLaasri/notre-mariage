@@ -1,5 +1,13 @@
 # Spécifications fonctionnelles
 
+## Moodboard : canvas libre — 22 novembre 2026
+
+Chaque moodboard possède un canvas à coordonnées libres. Glisser une photo ou sa poignée permet de la placer à gauche, à droite, au-dessus ou en dessous des autres, y compris aux coordonnées négatives. Le fond se déplace à la souris ou au doigt. Les boutons de zoom, le raccourci Ctrl/molette (ou Cmd/molette), « Tout voir » et « 100 % » permettent de naviguer. Le zoom et le cadrage sont locaux à l'appareil ; les positions sont partagées et enregistrées une fois à la fin du geste. Échap ou une interruption tactile annule le déplacement sans enregistrer.
+
+Un clic ou toucher bref sur une photo ouvre sa fiche sous le canvas, avec galerie agrandie, import, associations et commentaires existants. La vue fiches et ses filtres restent disponibles. La vue globale sans moodboard affiche les fiches pour éviter de superposer plusieurs boards. Le clavier permet de déplacer une photo avec les flèches depuis sa poignée (10 unités, ou 50 avec Maj), et d'explorer le fond avec les flèches depuis le canvas. Les contrôles restent accessibles sur mobile ; le pincement à deux doigts n'est pas implémenté.
+
+La migration 005 est nécessaire avant publication : elle conserve toutes les inspirations et leurs photos, puis place les anciennes fiches sur une grille initiale stable. Modifier les filtres ne réorganise pas les positions. Une nouvelle inspiration est placée sous les photos existantes pour éviter leur chevauchement initial. La sauvegarde utilise les contrôles d'appartenance et de concurrence existants. Une erreur de sauvegarde conserve l'ancienne position et affiche un message ; le partenaire retrouve les changements au rafraîchissement habituel, sans nouvel abonnement Realtime.
+
 ## Règles
 
 Un mariage rassemble ses membres et cérémonies. Une cérémonie contient catégories et besoins. Une offre répond à un besoin et référence un prestataire réutilisable. La préférence individuelle, la décision commune, la réservation, la dépense et le paiement sont distincts.

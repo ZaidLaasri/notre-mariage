@@ -1,0 +1,112 @@
+:host {
+  display: block;
+}
+.canvas-toolbar {
+  padding: 12px;
+  background: #fffdf8;
+  border: 1px solid #dedbd1;
+  border-radius: 16px 16px 0 0;
+}
+output {
+  min-width: 55px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.canvas-viewport {
+  position: relative;
+  height: min(72dvh, 850px);
+  min-height: 420px;
+  overflow: hidden;
+  touch-action: none;
+  isolation: isolate;
+  background-color: #f2eee5;
+  background-image: radial-gradient(#c9c6ba 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: 1px solid #dedbd1;
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+  cursor: grab;
+}
+.canvas-viewport:active {
+  cursor: grabbing;
+}
+.canvas-world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.canvas-photo {
+  position: absolute;
+  pointer-events: auto;
+  background: #fffefa;
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px #453d2d24;
+}
+.canvas-photo.moving {
+  z-index: 2;
+  box-shadow: 0 14px 32px #453d2d45;
+}
+.canvas-grip {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 4px;
+  margin-bottom: 6px;
+  cursor: grab;
+  touch-action: none;
+  border: 0;
+  background: transparent;
+  color: #555e4f;
+}
+.canvas-preview {
+  touch-action: none;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  text-align: left;
+}
+.canvas-preview img,
+.canvas-placeholder {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.canvas-placeholder {
+  display: grid;
+  place-items: center;
+  background: #edece3;
+  font-size: 14px;
+}
+.canvas-preview strong {
+  display: block;
+  padding-top: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  .canvas-viewport {
+    height: 65dvh;
+    min-height: 380px;
+  }
+  .canvas-toolbar .hint {
+    flex-basis: 100%;
+  }
+}

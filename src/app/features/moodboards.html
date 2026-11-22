@@ -172,15 +172,46 @@
     @for(c of s.data().ceremonies;track c.id){
     <option [value]="c.id">{{c.name}}</option>
     }</select
-  ><button (click)="mosaic.set(!mosaic())">
-    {{mosaic()?'Grille régulière':'Mosaïque'}}
+  ><button
+    (click)="canvas.set(!canvas()); inspecting.set('')"
+    [attr.aria-pressed]="canvas()"
+  >
+    {{canvas()?'Vue fiches':'Vue canvas'}}
   </button>
+  @if(!canvas()){<button (click)="mosaic.set(!mosaic())">
+    {{mosaic()?'Grille régulière':'Mosaïque'}}</button
+  >}
 </div>
+@if(canvas() && board()){
+<app-moodboard-canvas
+  [items]="canvasIdeas()"
+  [scope]="board()"
+  [busy]="s.busy()"
+  (positioned)="positionPhoto($event)"
+  (inspect)="inspect($event)"
+/>
+@if(inspecting()){
+<div
+  #inspirationDetails
+  tabindex="-1"
+  class="row between"
+  style="margin-top: 24px"
+>
+  <h2>Cette inspiration</h2>
+  <button (click)="inspecting.set('')">Fermer la fiche</button>
+</div>
+} } @if(canvas() && !board()){
+<p class="hint">
+  Choisissez un moodboard pour composer son canvas. La vue globale conserve
+  toutes vos fiches.
+</p>
+}
 <div class="moodboard-grid" [class.mosaic]="mosaic()">
-  @for(i of ideas();track i.id){
+  @for(i of ideas();track i.id){ @if(!canvas() || !board() ||
+  inspecting()===i.id){
   <article
     class="panel moodboard-card"
-    draggable="true"
+    [draggable]="!canvas()"
     (dragstart)="dragged.set(i.id)"
     (dragend)="dragged.set('')"
     (dragover)="allow($event)"
@@ -245,7 +276,7 @@
     </form>
     }
   </article>
-  }@empty{
+  } }@empty{
   <div class="empty panel">
     <h2>Commençons par une photo</h2>
     <p>

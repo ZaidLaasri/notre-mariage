@@ -1,4 +1,11 @@
-import { Component, computed, inject, signal } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { Store } from "../core/store";
@@ -7,18 +14,33 @@ import { Gallery } from "../shared/gallery";
 import { Inspiration, Moodboard, InspirationComment } from "../core/models";
 import { MOODBOARD_THEMES } from "../core/catalogue-templates";
 import { reordered } from "../core/timeline";
+import { MoodboardCanvas } from "../shared/moodboard-canvas";
+import { itemPoint } from "../core/moodboard-canvas";
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, Gallery],
+  imports: [ReactiveFormsModule, Gallery, MoodboardCanvas],
   templateUrl: "./moodboards.html",
 })
 export class Moodboards {
+  readonly canvas = signal(true);
+  readonly inspecting = signal("");
   readonly s = inject(Store);
   private fb = inject(FormBuilder);
   private photos = inject(Photos);
   private route = inject(ActivatedRoute);
   readonly themes = MOODBOARD_THEMES;
-  readonly board = signal("");
+  readonly board = signal(this.s.data().moodboards[0]?.id ?? "");
+  @ViewChild("inspirationDetails") details?: ElementRef<HTMLElement>;
+  inspect(id: string) {
+    this.inspecting.set(id);
+    setTimeout(() => {
+      this.details?.nativeElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      this.details?.nativeElement.focus({ preventScroll: true });
+    });
+  }
   readonly query = signal("");
   readonly theme = signal(this.route.snapshot.queryParamMap.get("theme") ?? "");
   readonly ceremony = signal("");
@@ -83,6 +105,66 @@ export class Moodboards {
   }
   selectBoard(e: Event) {
     this.board.set(this.value(e));
+    this.inspecting.set("");
+  }
+  canvasPosition(i: Inspiration) {
+    const rows = this.s
+      .data()
+      .inspirations.filter(
+        (x) => (x.moodboard_id ?? "") === (i.moodboard_id ?? ""),
+      )
+      .sort(
+        (a, b) =>
+          (a.position ?? 0) - (b.position ?? 0) ||
+          a.name.localeCompare(b.name) ||
+          a.id.localeCompare(b.id),
+      );
+    return itemPoint(
+      i,
+      rows.findIndex((x) => x.id === i.id),
+    );
+  }
+  readonly canvasIdeas = computed(() =>
+    this.ideas().map((i) => {
+      const p = this.canvasPosition(i);
+      return { ...i, canvas_x: p.x, canvas_y: p.y };
+    }),
+  );
+  positionPhoto(position: { id: string; x: number; y: number }) {
+    if (this.s.busy()) return;
+    if (
+      !Number.isFinite(position.x) ||
+      !Number.isFinite(position.y) ||
+      Math.abs(position.x) > 1000000 ||
+      Math.abs(position.y) > 1000000
+    ) {
+      this.s.error.set(
+        "Cette position est trop éloignée. Rapprochez la photo du board.",
+      );
+      return;
+    }
+    void this.s.run(async () => {
+      if (!this.s.data().inspirations.some((i) => i.id === position.id))
+        throw new Error(
+          "Cette inspiration a été supprimée. Actualisez le moodboard.",
+        );
+      await this.s.save("inspirations", {
+        id: position.id,
+        canvas_x: position.x,
+        canvas_y: position.y,
+      });
+    }, "Position enregistrée.");
+  }
+  nextCanvasPosition(board: string) {
+    const rows = this.s
+      .data()
+      .inspirations.filter((i) => (i.moodboard_id ?? "") === board);
+    if (!rows.length) return { canvas_x: 0, canvas_y: 0 };
+    const points = rows.map((i) => this.canvasPosition(i));
+    return {
+      canvas_x: Math.min(...points.map((p) => p.x)),
+      canvas_y: Math.max(...points.map((p) => p.y)) + 310,
+    };
   }
   editBoard(b?: Moodboard) {
     this.boardForm.reset({
@@ -146,6 +228,9 @@ export class Moodboards {
       const previous = this.s.data().inspirations.find((i) => i.id === v.id);
       const { colors, tags, ...fields } = v;
       await this.s.save("inspirations", {
+        ...(!previous || (previous.moodboard_id ?? "") !== v.moodboard_id
+          ? this.nextCanvasPosition(v.moodboard_id)
+          : {}),
         ...fields,
         id: v.id || undefined,
         name: v.name.trim(),
@@ -195,6 +280,7 @@ export class Moodboards {
         let id = "";
         try {
           const idea = await this.s.save("inspirations", {
+            ...this.nextCanvasPosition(board.id),
             moodboard_id: board.id,
             name: file.name.replace(/\.[^.]+$/, ""),
             description: "",
